@@ -37,4 +37,4 @@ def get_face(frame, width, height):
 	
 		return face
 
-	return -1
+	return None
