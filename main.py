@@ -1,10 +1,10 @@
 import cv2
 
-from obj import Camera
+from obj import devices
 from utils import haar_face_detection as fd
 
 # Cameras (to be written into a file)
-num_cameras = 3
+num_cameras = 1
 
 # Face size (square in px for CNN)
 face_size = 250
@@ -14,7 +14,7 @@ camera_thread = []
 cameras = []
 
 for cam in range(num_cameras):
-    cameras.append(Camera.Camera(cam))
+    cameras.append(devices.Camera(cam))
 
 while True:
 
