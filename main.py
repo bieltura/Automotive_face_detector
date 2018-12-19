@@ -16,34 +16,42 @@ camera_thread = []
 # Number of faces detected
 faces = [None] * num_cameras
 
+frames = [None] * num_cameras
+
 
 def run_camera(cam_id):
 
     faces[cam_id] = None
+    frames[cam_id] = None
 
-    cam = devices.Camera(cam_id)
+    camera_device = devices.Camera(cam_id)
 
     while True:
 
-        frame = cam.getFrame()
+        frame = camera_device.getFrame()
+
+        frames[cam_id] = frame
 
         face = fd.detect_face(frame, face_size, face_size)
 
         if face is not None:
             faces[cam_id] = face
-            cam.close()
+            camera_device.close()
             return
 
 
-for cam in range(num_cameras):
-    cam_thread = threading.Thread(target=run_camera, args=(cam,))
-    camera_thread.append(cam_thread)
-    cam_thread.start()
+for cam_id in range(num_cameras):
+    thread = threading.Thread(target=run_camera, args=(cam_id,))
+    camera_thread.append(thread)
+    thread.start()
 
 # Main program
 while True:
 
     for cam_id, face in enumerate(faces):
+
+        if frames[cam_id] is not None:
+            cv2.imshow(str(cam_id),frames[cam_id])
 
         if face is not None:
             print("Face detected in camera " + str(cam_id))
@@ -52,9 +60,9 @@ while True:
             # Calls to the NN HERE
 
             # Restart camera service
-            cam_thread = threading.Thread(target=run_camera, args=(cam_id,))
-            camera_thread[cam_id] = cam_thread
-            cam_thread.start()
+            thread = threading.Thread(target=run_camera, args=(cam_id,))
+            camera_thread[cam_id] = thread
+            thread.start()
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         cv2.destroyAllWindows()
