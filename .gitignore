@@ -1,0 +1,9 @@
+# Files that won't be pushed to github
+
+# Pycharm enviromental variables
+venv/
+.idea/
+
+# Compiled binaries
+__pychace__/
+*/__pycache__/
