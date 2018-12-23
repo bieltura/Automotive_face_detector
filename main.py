@@ -18,6 +18,8 @@ faces = [None] * num_cameras
 
 frames = [None] * num_cameras
 
+end = False
+
 
 def run_camera(cam_id):
 
@@ -28,14 +30,20 @@ def run_camera(cam_id):
 
     while True:
 
-        frame = camera_device.getFrame()
+        if not end:
 
-        frames[cam_id] = frame
+            frame = camera_device.getFrame()
 
-        face = fd.detect_face(frame, face_size, face_size)
+            frames[cam_id] = frame
 
-        if face is not None:
-            faces[cam_id] = face
+            face = fd.detect_face(frame, face_size, face_size)
+
+            if face is not None:
+                faces[cam_id] = face
+                camera_device.close()
+                return
+
+        else:
             camera_device.close()
             return
 
@@ -65,5 +73,6 @@ while True:
             thread.start()
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
+        end = True
         cv2.destroyAllWindows()
         break
