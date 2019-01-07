@@ -59,8 +59,8 @@ while True:
 
     for cam_id, face in enumerate(faces):
 
-        if faces[cam_id] is not None:
-            cv2.imshow(str(cam_id), faces[cam_id])
+        if frames[cam_id] is not None:
+            cv2.imshow(str(cam_id), frames[cam_id])
 
         if face is not None:
             print("Face detected in camera " + str(cam_id))
