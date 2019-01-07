@@ -5,7 +5,7 @@ from obj import devices
 from utils import haar_face_detection as fd
 
 # Cameras (to be written into a file)
-num_cameras = 1
+num_cameras = 2
 
 # Face size (square in px for CNN)
 face_size = 250
@@ -43,6 +43,7 @@ def run_camera(cam_id):
                 camera_device.close()
                 return
 
+        # Close the program
         else:
             camera_device.close()
             return
@@ -58,8 +59,8 @@ while True:
 
     for cam_id, face in enumerate(faces):
 
-        if frames[cam_id] is not None:
-            cv2.imshow(str(cam_id),frames[cam_id])
+        if faces[cam_id] is not None:
+            cv2.imshow(str(cam_id), faces[cam_id])
 
         if face is not None:
             print("Face detected in camera " + str(cam_id))

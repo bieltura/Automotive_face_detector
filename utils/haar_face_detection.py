@@ -1,10 +1,13 @@
-import numpy as np
 import cv2
-import os.path
+from threading import Lock
+lock = Lock()
 
 face_cascade = cv2.CascadeClassifier("data/haar/haarcascade_frontalface_default.xml")
 
 face_scale_factor = 1/5
+minNeighbour = 5
+face_pyramid_factor = 1.3
+
 
 def detect_face(frame, width_face, height_face):
 	# Size of the image
@@ -22,10 +25,14 @@ def detect_face(frame, width_face, height_face):
 def get_face(frame, width, height):
 
 	# Convert the frame to YUV ColorSpace
-	frame_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
+	frame_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)[:,:,0]
 
-	# Detection of the face - return rectangle (x,y),(x+w,y+h)
-	faces = face_cascade.detectMultiScale(frame_yuv[:, :, 0], 1.3, 5)
+	lock.acquire()
+	try:
+		# Detection of the face - return rectangle (x,y),(x+w,y+h) (can be done once by the thread)
+		faces = face_cascade.detectMultiScale(frame_yuv, face_pyramid_factor, minNeighbour)
+	finally:
+		lock.release()  # release lock
 
 	for (x, y, w, h) in faces:
 
