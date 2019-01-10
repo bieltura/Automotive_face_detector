@@ -14,56 +14,65 @@ face_size = 250
 cameras = [None] * num_cameras
 camera_thread = []
 
-# Number of faces detected
-faces = [None] * num_cameras
-frames = [None] * num_cameras
-
 end = False
 
+# Still working on a good image
+detect = cv2.imread('res/detect.png',0)
 
-def run_camera(cam_id):
-    cameras[cam_id] = devices.Camera(cam_id)
+
+def setup(cam_id):
+    cameras[cam_id] = devices.FaceCamera(cam_id)
+
+
+# Runs camera captures until a face is detected
+def run_face_camera(face_camera):
+    face_camera.setFace(None)
 
     while True:
 
         if not end:
-            frames[cam_id] = cameras[cam_id].getFrame()
+            frame = face_camera.captureFrame()
 
-            faces[cam_id] = fd.detect_face(frames[cam_id], face_size, face_size)
+            if frame is not None:
 
-            if faces[cam_id] is not None:
-                cameras[cam_id].close()
-                return
+                face_camera.setFace(fd.detect_face(frame, face_size, face_size))
+
+                if face_camera.getFace() is not None:
+                    face_camera.close()
+                    return
 
         # Close the program
         else:
-            cameras[cam_id].close()
+            face_camera.close()
             return
 
 
 for cam_id in range(num_cameras):
-    thread = threading.Thread(target=run_camera, args=(cam_id,))
+    setup(cam_id)
+    thread = threading.Thread(target=run_face_camera, args=(cameras[cam_id],))
     camera_thread.append(thread)
     thread.start()
 
 # Main program
 while True:
 
-    for cam_id in range(num_cameras):
+    for cam_id, camera in enumerate(cameras):
 
-        if frames[cam_id] is not None:
-            cv2.imshow(str(cam_id), cv2.resize(frames[cam_id], (800, 450)))
+        frame = camera.getFrame()
+        face = camera.getFace()
 
-        if faces[cam_id] is not None:
+        if frame is not None:
+            cv2.imshow(str(cam_id), cv2.resize(camera.getFrame(), (800, 450)))
+
+        if face is not None:
             print("Face detected in camera " + str(cam_id))
+            cv2.imshow(str(cam_id), cv2.resize(detect, (800, 450)))
 
             # Calls to the NN HERE
 
-            # Remove the face
-            faces[cam_id] = None
-
             # Restart camera service
-            thread = threading.Thread(target=run_camera, args=(cam_id,))
+            setup(cam_id)
+            thread = threading.Thread(target=run_face_camera, args=(cameras[cam_id],))
             camera_thread[cam_id] = thread
             thread.start()
 
