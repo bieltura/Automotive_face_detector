@@ -4,17 +4,17 @@ lock = Lock()
 
 face_cascade = cv2.CascadeClassifier("data/haar/haarcascade_frontalface_default.xml")
 
-face_scale_factor = 1/5
+face_scale_factor = 1/6
 minNeighbour = 5
 face_pyramid_factor = 1.3
 
 
 def detect_face(frame, width_face, height_face):
 	# Size of the image
-	width_frame, height_frame, channels = frame.shape
+	height_frame, width_frame, channels = frame.shape
 
 	# Minimum size to detect face (50x50 px of face), 250 px from dmax.
-	frame_face = cv2.resize(frame, (int(height_frame * face_scale_factor), int(width_frame * face_scale_factor)))
+	frame_face = cv2.resize(frame, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
 
 	face = get_face(frame_face, width_face, height_face)
 
@@ -34,6 +34,9 @@ def get_face(frame, width, height):
 	finally:
 		lock.release()  # release lock
 
+	if not len(faces):
+		return None
+
 	for (x, y, w, h) in faces:
 
 		# Cut the face part
@@ -43,5 +46,3 @@ def get_face(frame, width, height):
 		face = cv2.resize(face, (height, width), interpolation=cv2.INTER_CUBIC)
 	
 		return face
-
-	return None
