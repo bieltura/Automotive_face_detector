@@ -13,7 +13,6 @@ face_size = 250
 
 # Number of cameras in the system
 cameras = [None] * num_cameras
-detection_mask = [None] * num_cameras
 camera_thread = []
 
 end = False
@@ -23,7 +22,6 @@ text = cv2.imread('res/text_detect.png')
 
 def setup(cam_id):
     cameras[cam_id] = devices.FaceCamera(cam_id)
-    print(cameras[cam_id].getDim())
 
 
 # Runs camera captures until a face is detected
@@ -64,7 +62,7 @@ while True:
         face = camera.getFace()
 
         if frame is not None:
-            cv2.imshow(str(cam_id), cv2.resize(camera.getFrame(), (800, 450)))
+            cv2.imshow(str(cam_id), cv2.resize(camera.getFrame(), tuple(int(x/2) for x in camera.getDim())))
 
         if face is not None:
             print("Face detected in camera " + str(cam_id))
@@ -72,7 +70,7 @@ while True:
             detection_text = cv2.resize(text, camera.getDim())
 
             detection_text_gray = cv2.cvtColor(detection_text, cv2.COLOR_BGR2GRAY)
-            ret, mask = cv2.threshold(detection_text_gray, 10, 255, cv2.THRESH_BINARY)
+            ret, mask = cv2.threshold(detection_text_gray, 20, 255, cv2.THRESH_BINARY)
             mask_inv = cv2.bitwise_not(mask)
 
             # Now black-out the area of logo in ROI
@@ -84,7 +82,7 @@ while True:
             # Put text in ROI and modify the main image
             frame = cv2.add(img1_bg, img2_fg)
 
-            cv2.imshow(str(cam_id), cv2.resize(frame, (800, 450)))
+            cv2.imshow(str(cam_id), cv2.resize(frame, tuple(int(x/2) for x in camera.getDim())))
 
             # Calls to the NN HERE
 
