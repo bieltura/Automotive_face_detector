@@ -4,7 +4,7 @@ lock = Lock()
 
 face_cascade = cv2.CascadeClassifier("data/haar/haarcascade_frontalface_default.xml")
 
-face_scale_factor = 1/6
+face_scale_factor = 1/7
 minNeighbour = 5
 face_pyramid_factor = 1.3
 

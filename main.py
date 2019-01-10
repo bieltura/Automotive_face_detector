@@ -1,5 +1,6 @@
 import cv2
 import threading
+import numpy as np
 
 from obj import devices
 from utils import haar_face_detection as fd
@@ -12,16 +13,17 @@ face_size = 250
 
 # Number of cameras in the system
 cameras = [None] * num_cameras
+detection_mask = [None] * num_cameras
 camera_thread = []
 
 end = False
 
 # Still working on a good image
-detect = cv2.imread('res/detect.png',0)
-
+text = cv2.imread('res/text_detect.png')
 
 def setup(cam_id):
     cameras[cam_id] = devices.FaceCamera(cam_id)
+    print(cameras[cam_id].getDim())
 
 
 # Runs camera captures until a face is detected
@@ -66,7 +68,23 @@ while True:
 
         if face is not None:
             print("Face detected in camera " + str(cam_id))
-            cv2.imshow(str(cam_id), cv2.resize(detect, (800, 450)))
+
+            detection_text = cv2.resize(text, camera.getDim())
+
+            detection_text_gray = cv2.cvtColor(detection_text, cv2.COLOR_BGR2GRAY)
+            ret, mask = cv2.threshold(detection_text_gray, 10, 255, cv2.THRESH_BINARY)
+            mask_inv = cv2.bitwise_not(mask)
+
+            # Now black-out the area of logo in ROI
+            img1_bg = cv2.bitwise_and(frame, frame, mask=mask_inv)
+
+            # Take only region of logo from logo image.
+            img2_fg = cv2.bitwise_and(detection_text, detection_text, mask=mask)
+
+            # Put text in ROI and modify the main image
+            frame = cv2.add(img1_bg, img2_fg)
+
+            cv2.imshow(str(cam_id), cv2.resize(frame, (800, 450)))
 
             # Calls to the NN HERE
 

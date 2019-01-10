@@ -34,6 +34,9 @@ class Camera:
     def close(self):
         self.capture.release()
 
+    def getDim(self):
+        return self.width, self.height
+
 
 class FaceCamera(Camera):
 
