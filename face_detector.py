@@ -32,9 +32,8 @@ class CameraFaceDetector(Thread):
                     # Detect a face within that frame captured
                     self.face_camera.setFace(fd.detect_face(frame, self.face_size, self.face_size))
 
-                    # Face detected, close the camera service to analyze this face
+                    # Face detected, close the camera service to analyze the face
                     if self.face_camera.getFace() is not None:
-                        self.face_camera.close()
                         return
 
             # End the thread and close the camera

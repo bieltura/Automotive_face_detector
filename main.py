@@ -4,7 +4,7 @@ from face_detector import CameraFaceDetector
 from utils import image_processing as ip
 
 # Cameras (to be written into a file)
-num_cameras = 1
+num_cameras = 2
 
 # Face size (square in px for CNN)
 face_size = 250
@@ -43,12 +43,9 @@ while True:
 
             # Calls to the NN HERE
 
-            # Restart camera service
-            cameras[cam_id] = devices.FaceCamera(cam_id)
-            thread = CameraFaceDetector(cameras[cam_id], face_size)
-            thread.setName('Cam ' + str(cam_id))
-            camera_thread[cam_id] = thread
-            thread.start()
+            # Restart face detector (same camera)
+            camera_thread[cam_id] = CameraFaceDetector(cameras[cam_id], face_size)
+            camera_thread[cam_id].start()
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         for thread in camera_thread:

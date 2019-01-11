@@ -20,11 +20,7 @@ class Camera:
         self.frame = None
 
         if self.capture.isOpened():
-            ret, frame = self.capture.read()
-
-            # Green frame issues when cam is opened
-            if not np.array_equal(frame[1, 1, :], [0, 154, 0]):
-                self.frame = frame
+            ret, self.frame = self.capture.read()
 
         return self.getFrame()
 
