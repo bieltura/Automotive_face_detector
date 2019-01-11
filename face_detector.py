@@ -13,7 +13,6 @@ class CameraFaceDetector(Thread):
 
         # Variable to stop the camera thread if needed
         self.stopThread = False
-        pass
 
     # Main thread method
     def run(self):

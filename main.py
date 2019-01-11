@@ -1,7 +1,7 @@
 import cv2
 from obj import devices
 from face_detector import CameraFaceDetector
-from utils import image_processing as ip
+from utils import image_processing
 
 # Cameras (to be written into a file)
 num_cameras = 2
@@ -32,20 +32,20 @@ while True:
         face = camera.getFace()
 
         if frame is not None:
-            cv2.imshow(str(cam_id), cv2.resize(camera.getFrame(), tuple(int(x/2) for x in camera.getDim())))
+            if face is not None:
+                print("Face detected in camera " + str(cam_id))
 
-        if face is not None:
-            print("Face detected in camera " + str(cam_id))
+                frames = image_processing.mask(frame, text)
 
-            frames = ip.mask(frame, text)
+                cv2.imshow(str(cam_id), cv2.resize(frames, tuple(int(x/2) for x in camera.getDim())))
 
-            cv2.imshow(str(cam_id), cv2.resize(frames, tuple(int(x/2) for x in camera.getDim())))
+                # Calls to the NN HERE
 
-            # Calls to the NN HERE
-
-            # Restart face detector (same camera)
-            camera_thread[cam_id] = CameraFaceDetector(cameras[cam_id], face_size)
-            camera_thread[cam_id].start()
+                # Restart face detector (same camera)
+                camera_thread[cam_id] = CameraFaceDetector(cameras[cam_id], face_size)
+                camera_thread[cam_id].start()
+            else:
+                cv2.imshow(str(cam_id), cv2.resize(camera.getFrame(), tuple(int(x/2) for x in camera.getDim())))
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         for thread in camera_thread:
