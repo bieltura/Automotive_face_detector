@@ -12,4 +12,5 @@ class FacialRecognition(Thread):
         self.stopThread = False
 
     def run(self):
-        time.sleep(2)
+        # Simulate a 1 sec NN forward pass
+        time.sleep(1)

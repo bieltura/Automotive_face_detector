@@ -1,6 +1,7 @@
 import cv2
 from obj import devices
 from face_detector import CameraFaceDetector
+from face_recognition import FacialRecognition
 from utils import image_processing
 
 # Cameras (to be written into a file)
@@ -23,6 +24,8 @@ for cam_id in range(num_cameras):
     camera_thread.append(thread)
     thread.start()
 
+
+
 # Main program
 while True:
 
@@ -33,12 +36,19 @@ while True:
 
         if frame is not None:
             if face is not None:
+
+                # Neural Net Facial recognition start
+                facial_recognition_thread = FacialRecognition(face)
+                facial_recognition_thread.start()
+
                 print("Face detected in camera " + str(cam_id))
 
                 # Set text of detecting
                 frames = image_processing.mask(frame, text)
 
                 cv2.imshow(str(cam_id), cv2.resize(frames, tuple(int(x/4) for x in camera.getDim())))
+
+
 
                 # Calls to the NN HERE
 
