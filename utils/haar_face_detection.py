@@ -45,12 +45,14 @@ class Detector(Thread):
 							# Cut the face part
 							self.face = self.frame[y:y + h, x:x + w, :]
 
+					# Deactivate the loop, waiting for new frame
 					self.frame = None
 			else:
 				# Break the loop and stop the thread
 				return
 
 	def detect_face(self, frame):
+		# Active the loop to analyze the frame
 		self.frame = frame
 
 	# Returns the face crop of an image in the specified size
