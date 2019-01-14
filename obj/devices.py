@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 
 
 class Camera:
@@ -8,6 +7,8 @@ class Camera:
         self.id = cam_id
         self.capture = None
         self.frame = None
+
+        # Open the device to get properties of the cam
         self.open()
 
         self.width = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -17,10 +18,10 @@ class Camera:
         self.capture = cv2.VideoCapture(self.id)
 
     def captureFrame(self):
-        self.frame = None
-
         if self.capture.isOpened():
             ret, self.frame = self.capture.read()
+        else:
+            self.frame = None
 
         return self.getFrame()
 

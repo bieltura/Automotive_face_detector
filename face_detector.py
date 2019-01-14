@@ -1,4 +1,4 @@
-from utils import haar_face_detection as fd
+from utils import haar_face_detection
 from threading import Thread
 
 
@@ -10,6 +10,9 @@ class CameraFaceDetector(Thread):
 
         self.face_camera = face_camera
         self.face_size = face_size
+
+        self.detector_thread = haar_face_detection.Detector()
+        self.detector_thread.start()
 
         # Variable to stop the camera thread if needed
         self.stopThread = False
@@ -27,13 +30,8 @@ class CameraFaceDetector(Thread):
                 frame = self.face_camera.captureFrame()
 
                 if frame is not None:
-
-                    # Detect a face within that frame captured
-                    self.face_camera.setFace(fd.detect_face(frame, self.face_size, self.face_size))
-
-                    # Face detected, close the camera service to analyze the face
-                    if self.face_camera.getFace() is not None:
-                        return
+                    self.detector_thread.detect_face(frame)
+                    self.face_camera.setFace(self.detector_thread.get_face(self.face_size, self.face_size))
 
             # End the thread and close the camera
             else:
@@ -42,4 +40,6 @@ class CameraFaceDetector(Thread):
 
     # State variable for stopping face detector service
     def stop(self):
+        self.detector_thread.stop()
         self.stopThread = True
+

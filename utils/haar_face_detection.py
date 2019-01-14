@@ -1,52 +1,67 @@
 import cv2
-from threading import Lock
-lock = Lock()
-
-face_cascade = cv2.CascadeClassifier("data/haar/haarcascade_frontalface_default.xml")
+from threading import Thread
 
 # Haar filter values
-face_scale_factor = 1/4
+face_scale_factor = 1/8
 minNeighbour = 5
 face_pyramid_factor = 1.3
 
 
-def detect_face(frame, width_face, height_face):
+class Detector(Thread):
+	def __init__(self):
+		Thread.__init__(self)
 
-	# Size of the image
-	height_frame, width_frame, channels = frame.shape
+		self.frame = None
+		self.face = None
 
-	# Minimum size to detect face (50x50 px of face), 250 px from dmax.
-	frame_face = cv2.resize(frame, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
+		# Cascade needs to be loaded for every different camera
+		self.face_cascade = cv2.CascadeClassifier("data/haar/haarcascade_frontalface_default.xml")
 
-	face = get_face(frame_face, width_face, height_face)
+		self.stopThread = False
 
-	return face
+	def run(self):
+		while True:
+			if not self.stopThread:
+				if self.frame is not None:
 
+					# Size of the image
+					height_frame, width_frame, channels = self.frame.shape
 
-# Returns the face crop of an image in the specified size
-def get_face(frame, width, height):
+					# Minimum size to detect face (50x50 px of face), 250 px from dmax.
+					frame_face = cv2.resize(self.frame, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
 
-	# Convert the frame to YUV ColorSpace
-	frame_yuv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)[:, :, 0]
+					# Convert the frame to YUV ColorSpace
+					frame_yuv = cv2.cvtColor(frame_face, cv2.COLOR_BGR2YUV)[:, :, 0]
 
-	# Check once per camera service
-	lock.acquire()
-	try:
-		# Detection of the face - return rectangle [(x,y), (x+w,y+h)]
-		faces = face_cascade.detectMultiScale(frame_yuv, face_pyramid_factor, minNeighbour)
-	finally:
-		lock.release()
+					# Detection of the face - return rectangle [(x,y), (x+w,y+h)]
+					faces = self.face_cascade.detectMultiScale(frame_yuv, face_pyramid_factor, minNeighbour)
 
-	# No face detected
-	if not len(faces):
-		return None
+					# No face detected
+					if not len(faces):
+						self.face = None
 
-	for (x, y, w, h) in faces:
+					else:
+						for (x, y, w, h) in faces:
+							# Cut the face part
+							self.face = self.frame[y:y + h, x:x + w, :]
 
-		# Cut the face part
-		face = frame[y:y+h, x:x+w, :]
+					self.frame = None
+			else:
+				# Break the loop and stop the thread
+				return
 
-		# Resize to fit the neural network
-		face = cv2.resize(face, (height, width), interpolation=cv2.INTER_CUBIC)
-	
-		return face
+	def detect_face(self, frame):
+		self.frame = frame
+
+	# Returns the face crop of an image in the specified size
+	def get_face(self, height_face, width_face):
+
+		if self.face is not None:
+			# Resize to fit the neural network
+			return cv2.resize(self.face, (height_face, width_face), interpolation=cv2.INTER_CUBIC)
+		else:
+			return None
+
+	# State variable for stopping face detector service
+	def stop(self):
+		self.stopThread = True

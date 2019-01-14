@@ -16,10 +16,10 @@ camera_thread = []
 # Still working on a good image
 text = cv2.imread('res/text_detect.png')
 
+# Setup the cameras
 for cam_id in range(num_cameras):
     cameras[cam_id] = devices.FaceCamera(cam_id)
     thread = CameraFaceDetector(cameras[cam_id], face_size)
-    thread.setName('Cam '+str(cam_id))
     camera_thread.append(thread)
     thread.start()
 
@@ -35,17 +35,15 @@ while True:
             if face is not None:
                 print("Face detected in camera " + str(cam_id))
 
+                # Set text of detecting
                 frames = image_processing.mask(frame, text)
 
-                cv2.imshow(str(cam_id), cv2.resize(frames, tuple(int(x/2) for x in camera.getDim())))
+                cv2.imshow(str(cam_id), cv2.resize(frames, tuple(int(x/4) for x in camera.getDim())))
 
                 # Calls to the NN HERE
 
-                # Restart face detector (same camera)
-                camera_thread[cam_id] = CameraFaceDetector(cameras[cam_id], face_size)
-                camera_thread[cam_id].start()
             else:
-                cv2.imshow(str(cam_id), cv2.resize(camera.getFrame(), tuple(int(x/2) for x in camera.getDim())))
+                cv2.imshow(str(cam_id), cv2.resize(camera.getFrame(), tuple(int(x/4) for x in camera.getDim())))
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         for thread in camera_thread:
