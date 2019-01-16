@@ -17,6 +17,7 @@ class Detector(Thread):
 		# Cascade needs to be loaded for every different camera
 		self.face_cascade = cv2.CascadeClassifier("data/haar/haarcascade_frontalface_default.xml")
 
+		# Variable to stop the camera thread if needed
 		self.stopThread = False
 
 	def run(self):
@@ -36,14 +37,18 @@ class Detector(Thread):
 					# Detection of the face - return rectangle [(x,y), (x+w,y+h)]
 					faces = self.face_cascade.detectMultiScale(frame_yuv, face_pyramid_factor, minNeighbour)
 
-					# No face detected
+					# No face detected (do with length)
 					if not len(faces):
 						self.face = None
 
 					else:
 						for (x, y, w, h) in faces:
+
+							# Re-scale the values to cut from original frame
+							x, y, w, h = (int(var/face_scale_factor) for var in (x, y, w, h))
+
 							# Cut the face part
-							self.face = self.frame[y:y + h, x:x + w, :]
+							self.face = self.frame[y:(y + h), x:(x + w), :]
 
 					# Deactivate the loop, waiting for new frame
 					self.frame = None

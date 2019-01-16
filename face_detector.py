@@ -11,6 +11,7 @@ class CameraFaceDetector(Thread):
         self.face_camera = face_camera
         self.face_size = face_size
 
+        # Every face camera has a haar face detector thread
         self.detector_thread = haar_face_detection.Detector()
         self.detector_thread.start()
 
@@ -30,7 +31,10 @@ class CameraFaceDetector(Thread):
                 frame = self.face_camera.captureFrame()
 
                 if frame is not None:
+                    # Detect if there is a face in the frame with haar service
                     self.detector_thread.detect_face(frame)
+
+                    # Set the face of the detected face (with the dimensions specified) - even if it is None
                     self.face_camera.setFace(self.detector_thread.get_face(self.face_size, self.face_size))
 
             # End the thread and close the camera
@@ -40,6 +44,9 @@ class CameraFaceDetector(Thread):
 
     # State variable for stopping face detector service
     def stop(self):
+        # Stop the service for the haar detector
         self.detector_thread.stop()
+
+        # Stop this face_detector thread
         self.stopThread = True
 

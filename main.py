@@ -48,9 +48,10 @@ while True:
                 frames = image_processing.mask(frame, text)
 
                 cv2.imshow("Camera " + str(cam_id), cv2.resize(frames, tuple(int(x/4) for x in camera.getDim())))
+                cv2.imshow("Face " + str(cam_id), face)
 
                 # Calls to the NN HERE
-                facial_recognition_thread.start()
+                #facial_recognition_thread.start()
 
             else:
                 cv2.imshow("Camera " + str(cam_id), cv2.resize(camera.getFrame(), tuple(int(x/4) for x in camera.getDim())))
