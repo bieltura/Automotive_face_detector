@@ -2,7 +2,7 @@ import cv2
 from threading import Thread
 
 # Haar filter values
-face_scale_factor = 1/6
+face_scale_factor = 1/3
 minNeighbour = 5
 face_pyramid_factor = 1.3
 
