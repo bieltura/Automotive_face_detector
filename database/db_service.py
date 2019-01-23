@@ -4,12 +4,19 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 import numpy as np
 
+# Database setup and metadata
 Base = declarative_base()
-engine = create_engine('sqlite:///sqlalchemy_example.db')
+engine = create_engine('sqlite:///IDNEO.db')
+Base.metadata.bind = engine
+
+DBSession = sessionmaker()
+DBSession.bind = engine
+session = DBSession()
 
 class Person(Base):
     __tablename__ = 'Person'
 
+    # Person features
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     face_img_path = Column(String, nullable=False)
@@ -17,17 +24,12 @@ class Person(Base):
 
 
 def create_database():
-    # Create an engine that stores data in the local directory's
-    # sqlalchemy_example.db file.
-
     Base.metadata.create_all(engine)
 
-def add_person(name, picture):
 
-    Base.metadata.bind = engine
+def add_person(name):
 
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
+    picture = "database/img/" + name.replace(" ", "_") + ".jpg"
 
     # Compute the face features of a picture
     face_features = np.array([1,2,3,4])
@@ -38,22 +40,11 @@ def add_person(name, picture):
 
 
 def get_all_persons():
-
-    Base.metadata.bind = engine
-
-    DBSession = sessionmaker()
-    DBSession.bind = engine
-    session = DBSession()
-
     return session.query(Person).all()
 
 
 def get_person_from_id(id):
-
-    Base.metadata.bind = engine
-
-    DBSession = sessionmaker()
-    DBSession.bind = engine
-    session = DBSession()
-
     return session.query(Person).get(id)
+
+def get_persons_by_name(name):
+    return session.query(Person).filter_by(name = name)
