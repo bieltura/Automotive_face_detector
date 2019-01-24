@@ -6,7 +6,7 @@ import numpy as np
 
 # Database setup and metadata
 Base = declarative_base()
-engine = create_engine('sqlite:///IDNEO.db')
+engine = create_engine('sqlite:///database/IDNEO.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker()
@@ -27,14 +27,12 @@ def create_database():
     Base.metadata.create_all(engine)
 
 
-def add_person(name):
-
-    picture = "database/img/" + name.replace(" ", "_") + ".jpg"
+def add_person(name, picture_path):
 
     # Compute the face features of a picture
     face_features = np.array([1,2,3,4])
 
-    new_person = Person(name=name, face_img_path=picture, face_features=face_features.tostring())
+    new_person = Person(name=name, face_img_path=picture_path, face_features=face_features.tostring())
     session.add(new_person)
     session.commit()
 
@@ -46,5 +44,7 @@ def get_all_persons():
 def get_person_from_id(id):
     return session.query(Person).get(id)
 
+
 def get_persons_by_name(name):
-    return session.query(Person).filter_by(name = name)
+    # Asume there is only one person with the same name
+    return session.query(Person).filter_by(name=name).first()
