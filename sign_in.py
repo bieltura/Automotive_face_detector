@@ -15,13 +15,8 @@ while True:
 
     cv2.imshow("Log in camera", cv2.resize(camera.getFrame(), tuple(int(x / 2) for x in camera.getDim())))
 
-    # Quit the program with q
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
-        break
-
     # Save the image
-    elif cv2.waitKey(1) & 0xFF == ord('s'):
+    if cv2.waitKey(1) & 0xFF == ord('s'):
         # Get the name of the person
         name = input("Name: ")
 
@@ -36,11 +31,16 @@ while True:
         person = db.get_persons_by_name(name)
 
         print(" ")
-        print("PERSON ID " + str(person.id))
+        print("PERSON ID: " + str(person.id))
         print("NAME: " + str(person.name))
         print("PICTURE: " + str(person.face_img_path))
         print("FACE FEATURES: ")
         print(np.fromstring(person.face_features, int))
 
+        cv2.destroyAllWindows()
+        break
+
+    # Quit the program with q
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         cv2.destroyAllWindows()
         break

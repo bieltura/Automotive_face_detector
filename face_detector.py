@@ -1,4 +1,5 @@
 from utils import haar_face_detection
+from utils import alignDlib_face_detecion
 from threading import Thread
 
 
@@ -12,7 +13,7 @@ class CameraFaceDetector(Thread):
         self.face_size = face_size
 
         # Every face camera has a haar face detector thread
-        self.detector_thread = haar_face_detection.Detector()
+        self.detector_thread = alignDlib_face_detecion.Detector()
         self.detector_thread.start()
 
         # Variable to stop the camera thread if needed
@@ -44,7 +45,7 @@ class CameraFaceDetector(Thread):
 
     # State variable for stopping face detector service
     def stop(self):
-        # Stop the service for the haar detector
+        # Stop the service for the detector
         self.detector_thread.stop()
 
         # Stop this face_detector thread
