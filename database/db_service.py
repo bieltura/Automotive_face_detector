@@ -27,10 +27,9 @@ def create_database():
     Base.metadata.create_all(engine)
 
 
-def add_person(name, picture_path):
+def add_person(name, picture_path, face_features):
 
     # Compute the face features of a picture
-    face_features = np.array([1,2,3,4])
 
     new_person = Person(name=name, face_img_path=picture_path, face_features=face_features.tostring())
     session.add(new_person)

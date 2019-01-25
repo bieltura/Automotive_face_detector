@@ -13,6 +13,7 @@ class CameraFaceDetector(Thread):
         self.face_size = face_size
 
         # Every face camera has a haar face detector thread
+        #self.detector_thread = haar_face_detection.Detector()
         self.detector_thread = alignDlib_face_detecion.Detector()
         self.detector_thread.start()
 

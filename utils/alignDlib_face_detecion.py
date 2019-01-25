@@ -33,10 +33,10 @@ class Detector(Thread):
 					frame_face = cv2.resize(self.frame, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
 
 					# Convert the frame to YUV ColorSpace
-					#frame_yuv = cv2.cvtColor(frame_face, cv2.COLOR_BGR2YUV)[:, :, 0]
+					frame_yuv = cv2.cvtColor(frame_face, cv2.COLOR_BGR2YUV)[:, :, 0]
 
 					# Detect the bounding box
-					bb = self.alignment.getLargestFaceBoundingBox(frame_face)
+					bb = self.alignment.getLargestFaceBoundingBox(frame_yuv)
 
 					if bb is None:
 						self.face = None
@@ -50,7 +50,7 @@ class Detector(Thread):
 						bb = dlib.rectangle(left=x, top=y, right=x+w, bottom=y+h)
 
 						# Crop the image from the boundary box (the big)
-						face_aligned = self.alignment.align(250, self.frame, bb, landmarkIndices=AlignDlib.OUTER_EYES_AND_NOSE)
+						face_aligned = self.alignment.align(96, self.frame, bb, landmarkIndices=AlignDlib.OUTER_EYES_AND_NOSE)
 						self.face = face_aligned
 
 					# Deactivate the loop, waiting for new frame
