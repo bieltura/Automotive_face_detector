@@ -56,18 +56,21 @@ while True:
 
                 print("Face detected in camera " + str(cam_id))
 
-                # Set text of detecting
-                frames = image_processing.mask(frame, text)
-
-                cv2.imshow("Camera " + str(cam_id), cv2.resize(frames, tuple(int(x/2) for x in camera.getDim())))
-                #cv2.imshow("Face " + str(cam_id), face)
-
                 facial_recognition_thread.recognize_face(face)
 
                 face_features = None
 
                 # Wait for the face features to be computed
                 while face_features is None:
+
+                    camera.captureFrame()
+                    frame = camera.getFrame()
+
+                    # Set text of detecting
+                    frames = image_processing.mask(frame, text)
+
+                    cv2.imshow("Camera " + str(cam_id), cv2.resize(frames, tuple(int(x / 2) for x in camera.getDim())))
+
                     face_features = facial_recognition_thread.get_face_features()
 
                 # Compare from database
