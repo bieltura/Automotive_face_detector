@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from obj import devices
 from face_recognition import FacialRecognition
-from utils.align import AlignDlib
+from utils.dlib_face_alignment import AlignDlib
 import dlib
 
 # Scale factor! Adaptive to the dimensions!!!

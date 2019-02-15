@@ -16,7 +16,7 @@ for camera in glob.glob("/dev/video?"):
     num_cameras += 1
 
 # Face size (square in px for CNN)
-face_size = 96
+face_size = 224
 
 # Number of cameras in the system
 cameras = [None] * num_cameras
@@ -34,11 +34,11 @@ for cam_id in range(num_cameras):
 
 
 # Neural Net Facial recognition start
-facial_recognition_thread = FacialRecognition()
+#facial_recognition_thread = FacialRecognition()
 
 # Calls to the NN HERE
-print("Start thread for NN")
-facial_recognition_thread.start()
+#print("Start thread for NN")
+#facial_recognition_thread.start()
 
 #nn4_small2_pretrained = model.create_model()
 #nn4_small2_pretrained.load_weights('nn/bin/nn4.small2.v1.h5')
@@ -51,11 +51,22 @@ while True:
         frame = camera.getFrame()
         face = camera.getFace()
 
+        type(face)
+
         if frame is not None:
             if face is not None:
 
                 print("Face detected in camera " + str(cam_id))
+                cv2.imshow("Face " + str(cam_id), face)
 
+                frame = camera.getFrame()
+
+                # Set text of detecting
+                frames = image_processing.mask(frame, text)
+
+                cv2.imshow("Camera " + str(cam_id), cv2.resize(frames, tuple(int(x / 2) for x in camera.getDim())))
+
+                """
                 facial_recognition_thread.recognize_face(face)
 
                 face_features = None
@@ -85,8 +96,7 @@ while True:
 
                 print("Recognized as: " + str(match))
                 print("")
-
-
+                """
 
             else:
                 cv2.imshow("Camera " + str(cam_id), cv2.resize(camera.getFrame(), tuple(int(x/2) for x in camera.getDim())))
@@ -94,7 +104,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         for thread in camera_thread:
             thread.stop()
-        facial_recognition_thread.stop()
+        #facial_recognition_thread.stop()
         cv2.destroyAllWindows()
 
         break
