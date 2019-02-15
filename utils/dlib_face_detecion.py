@@ -1,14 +1,12 @@
 import cv2
 import dlib
 
-from utils.dlib_face_alignment import AlignDlib
+from utils import dlib_face_alignment
 
 # Scale factor! Adaptive to the dimensions!!!
 face_scale_factor = 1/15
 
-# Cascade needs to be loaded for every different camera
-alignment = AlignDlib('data/dlib/shape_predictor_5_face_landmarks.dat', small_detection=True)
-#alignment = AlignDlib('data/dlib/shape_predictor_68_face_landmarks.dat', small_detection=False)
+detector = dlib.get_frontal_face_detector()
 
 
 def detect_face(frame, face_dim):
@@ -27,7 +25,7 @@ def detect_face(frame, face_dim):
 		frame_yuv = cv2.cvtColor(frame_face, cv2.COLOR_BGR2YUV)[:, :, 0]
 
 		# Detect the bounding box
-		bb = alignment.getLargestFaceBoundingBox(frame_yuv)
+		bb = getLargestFaceBoundingBox(frame_face)
 
 		if bb is None:
 			return None
@@ -40,8 +38,22 @@ def detect_face(frame, face_dim):
 			bb = dlib.rectangle(left=x, top=y, right=x+w, bottom=y+h)
 
 			# Crop the image from the boundary box (the big)
-			return alignment.align(face_dim, frame, bb)
+			return dlib_face_alignment.align(face_dim, frame, bb)
 
 	else:
 		# Break the loop and stop the thread
+		return None
+
+
+# Find all face bounding boxes in an image
+def getAllFaceBoundingBoxes(rgbImg):
+	return detector(rgbImg, 1)
+
+
+# Find the largest face bounding box
+def getLargestFaceBoundingBox(rgbImg, skipMulti=False):
+	faces = getAllFaceBoundingBoxes(rgbImg)
+	if (not skipMulti and len(faces) > 0) or len(faces) == 1:
+		return max(faces, key=lambda rect: rect.width() * rect.height())
+	else:
 		return None

@@ -54,9 +54,9 @@ while True:
             if face is not None:
 
                 print("Face detected in camera " + str(cam_id))
-                cv2.imshow("Face " + str(cam_id), face)
+                #cv2.imshow("Face " + str(cam_id), face)
 
-                frame = camera.getFrame()
+                #frame = camera.getFrame()
 
                 # Set text of detecting
                 frames = image_processing.mask(frame, text)

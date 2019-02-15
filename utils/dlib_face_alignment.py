@@ -2,6 +2,7 @@ import cv2
 import dlib
 import numpy as np
 
+# Template for 68 different points in the face to perform the affine transformation
 BIG_TEMPLATE = np.float32([
     (0.0792396913815, 0.339223741112), (0.0829219487236, 0.456955367943),
     (0.0967927109165, 0.575648016728), (0.122141515615, 0.691921601066),
@@ -38,73 +39,46 @@ BIG_TEMPLATE = np.float32([
     (0.672409137852, 0.744177032192), (0.572539621444, 0.776609286626),
     (0.5240106503, 0.783370783245), (0.477561227414, 0.778476346951)])
 
+# Template for 5 points to perform the affine transformation
 SMALL_TEMPLATE = BIG_TEMPLATE[[45, 42, 36, 39, 33]]
 
+predictor = dlib.shape_predictor('data/dlib/shape_predictor_5_face_landmarks.dat')
+landmarkIndices = [0, 2, 4]
+TEMPLATE = SMALL_TEMPLATE
 
-class AlignDlib:
-    """
-    Use `dlib's landmark estimation <http://blog.dlib.net/2014/08/real-time-face-pose-estimation.html>`_ to align faces.
+#predictor = dlib.shape_predictor('data/dlib/shape_predictor_68_face_landmarks.dat')
+#landmarkIndices = [36, 45, 33]
+#TEMPLATE = BIG_TEMPLATE
 
-    The alignment preprocess faces for input into a neural network.
-    Faces are resized to the same size (such as 96x96) and transformed
-    to make landmarks (such as the eyes and nose) appear at the same
-    location on every image.
-    """
-
-    def __init__(self, facePredictor, small_detection=False):
-        self.detector = dlib.get_frontal_face_detector()
-        self.predictor = dlib.shape_predictor(facePredictor)
-        self.template = BIG_TEMPLATE
-
-        if small_detection:
-            self.landmarkIndices = [0, 2, 4]
-            self.template = SMALL_TEMPLATE
-        else:
-            self.landmarkIndices = [36, 45, 33]
-            self.template = BIG_TEMPLATE
-
-        # TODO normalization understanding
-        tpl_min, tpl_max = np.min(BIG_TEMPLATE, axis=0), np.max(BIG_TEMPLATE, axis=0)
-        self.template = (self.template - tpl_min) / (tpl_max - tpl_min)
+# TODO normalization understanding
+tpl_min, tpl_max = np.min(BIG_TEMPLATE, axis=0), np.max(BIG_TEMPLATE, axis=0)
+TEMPLATE = (TEMPLATE - tpl_min) / (tpl_max - tpl_min)
 
 
-    # Find all face bounding boxes in an image
-    def getAllFaceBoundingBoxes(self, rgbImg):
-        return self.detector(rgbImg, 1)
+# Transform and align a face in an image
+def align(imgDim, rgbImg, bb=None, landmarks=None):
 
-    # Find the largest face bounding box
-    def getLargestFaceBoundingBox(self, rgbImg, skipMulti=False):
-        faces = self.getAllFaceBoundingBoxes(rgbImg)
-        if (not skipMulti and len(faces) > 0) or len(faces) == 1:
-            return max(faces, key=lambda rect: rect.width() * rect.height())
-        else:
-            return None
+    # Get the face Bounding box of the frame
+    if bb is None:
+        return None
 
-    # Find the landmarks of a face
-    def findLandmarks(self, rgbImg, bb):
-        points = self.predictor(rgbImg, bb)
-        return list(map(lambda p: (p.x, p.y), points.parts()))
-
-    # Transform and align a face in an image
-    def align(self, imgDim, rgbImg, bb=None, landmarks=None):
-
-        # Get the face Bounding box of the frame
-        if bb is None:
-            bb = self.getLargestFaceBoundingBox(rgbImg)
-            if bb is None:
-                return
-
-        # Get the landmarks of the face
-        if landmarks is None:
-            landmarks = self.findLandmarks(rgbImg, bb)
+    # Get the landmarks of the face
+    if landmarks is None:
+        landmarks = findLandmarks(rgbImg, bb)
 
         npLandmarks = np.float32(landmarks)
-        npLandmarkIndices = np.array(self.landmarkIndices)
+        npLandmarkIndices = np.array(landmarkIndices)
 
-        # Create a 2x3 matrix to transform lines
-        H = cv2.getAffineTransform(npLandmarks[npLandmarkIndices], imgDim * self.template[npLandmarkIndices])
+        # Create a 2x3 matrix to transform lines (3 points)
+        H = cv2.getAffineTransform(npLandmarks[npLandmarkIndices], imgDim * TEMPLATE[npLandmarkIndices])
 
         # Apply the affine transformation
         thumbnail = cv2.warpAffine(rgbImg, H, (imgDim, imgDim))
 
         return thumbnail
+
+
+# Find the landmarks of a face
+def findLandmarks(rgbImg, bb):
+    points = predictor(rgbImg, bb)
+    return list(map(lambda p: (p.x, p.y), points.parts()))
