@@ -2,7 +2,7 @@ import cv2
 import dlib
 import numpy as np
 
-TEMPLATE = np.float32([
+BIG_TEMPLATE = np.float32([
     (0.0792396913815, 0.339223741112), (0.0829219487236, 0.456955367943),
     (0.0967927109165, 0.575648016728), (0.122141515615, 0.691921601066),
     (0.168687863544, 0.800341263616), (0.239789390707, 0.895732504778),
@@ -38,8 +38,7 @@ TEMPLATE = np.float32([
     (0.672409137852, 0.744177032192), (0.572539621444, 0.776609286626),
     (0.5240106503, 0.783370783245), (0.477561227414, 0.778476346951)])
 
-TPL_MIN, TPL_MAX = np.min(TEMPLATE, axis=0), np.max(TEMPLATE, axis=0)
-MINMAX_TEMPLATE = (TEMPLATE - TPL_MIN) / (TPL_MAX - TPL_MIN)
+SMALL_TEMPLATE = BIG_TEMPLATE[[45, 42, 36, 39, 33]]
 
 
 class AlignDlib:
@@ -52,13 +51,22 @@ class AlignDlib:
     location on every image.
     """
 
-    # Landmark indices for two types of alignment
-    INNER_EYES_AND_BOTTOM_LIP = [39, 42, 57]
-    OUTER_EYES_AND_NOSE = [36, 45, 33]
-
-    def __init__(self, facePredictor):
+    def __init__(self, facePredictor, small_detection=False):
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(facePredictor)
+        self.template = BIG_TEMPLATE
+
+        if small_detection:
+            self.landmarkIndices = [0, 2, 4]
+            self.template = SMALL_TEMPLATE
+        else:
+            self.landmarkIndices = [36, 45, 33]
+            self.template = BIG_TEMPLATE
+
+        # TODO normalization understanding
+        tpl_min, tpl_max = np.min(BIG_TEMPLATE, axis=0), np.max(BIG_TEMPLATE, axis=0)
+        self.template = (self.template - tpl_min) / (tpl_max - tpl_min)
+
 
     # Find all face bounding boxes in an image
     def getAllFaceBoundingBoxes(self, rgbImg):
@@ -78,7 +86,7 @@ class AlignDlib:
         return list(map(lambda p: (p.x, p.y), points.parts()))
 
     # Transform and align a face in an image
-    def align(self, imgDim, rgbImg, bb=None, landmarks=None, landmarkIndices=OUTER_EYES_AND_NOSE):
+    def align(self, imgDim, rgbImg, bb=None, landmarks=None):
 
         # Get the face Bounding box of the frame
         if bb is None:
@@ -91,10 +99,10 @@ class AlignDlib:
             landmarks = self.findLandmarks(rgbImg, bb)
 
         npLandmarks = np.float32(landmarks)
-        npLandmarkIndices = np.array(landmarkIndices)
+        npLandmarkIndices = np.array(self.landmarkIndices)
 
         # Create a 2x3 matrix to transform lines
-        H = cv2.getAffineTransform(npLandmarks[npLandmarkIndices], imgDim * MINMAX_TEMPLATE[npLandmarkIndices])
+        H = cv2.getAffineTransform(npLandmarks[npLandmarkIndices], imgDim * self.template[npLandmarkIndices])
 
         # Apply the affine transformation
         thumbnail = cv2.warpAffine(rgbImg, H, (imgDim, imgDim))

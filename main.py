@@ -6,7 +6,6 @@ from utils import image_processing
 from database import db_service as db
 import glob
 
-from threading import Thread
 from nn import model
 import numpy as np
 
@@ -50,8 +49,6 @@ while True:
 
         frame = camera.getFrame()
         face = camera.getFace()
-
-        type(face)
 
         if frame is not None:
             if face is not None:

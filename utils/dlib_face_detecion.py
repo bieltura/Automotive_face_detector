@@ -7,7 +7,8 @@ from utils.dlib_face_alignment import AlignDlib
 face_scale_factor = 1/15
 
 # Cascade needs to be loaded for every different camera
-alignment = AlignDlib('data/dlib/shape_predictor_68_face_landmarks.dat')
+alignment = AlignDlib('data/dlib/shape_predictor_5_face_landmarks.dat', small_detection=True)
+#alignment = AlignDlib('data/dlib/shape_predictor_68_face_landmarks.dat', small_detection=False)
 
 
 def detect_face(frame, face_dim):
@@ -39,7 +40,7 @@ def detect_face(frame, face_dim):
 			bb = dlib.rectangle(left=x, top=y, right=x+w, bottom=y+h)
 
 			# Crop the image from the boundary box (the big)
-			return alignment.align(face_dim, frame, bb, landmarkIndices=AlignDlib.OUTER_EYES_AND_NOSE)
+			return alignment.align(face_dim, frame, bb)
 
 	else:
 		# Break the loop and stop the thread
