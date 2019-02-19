@@ -9,7 +9,7 @@ import glob
 from nn import model
 import numpy as np
 
-# Cameras (to be written into a file)
+# Check number of cameras in Linux distribution cameras
 num_cameras = 0
 for camera in glob.glob("/dev/video?"):
     num_cameras += 1
@@ -56,12 +56,30 @@ while True:
                 print("Face detected in camera " + str(cam_id))
                 #cv2.imshow("Face " + str(cam_id), face)
 
-                #frame = camera.getFrame()
+                landmarks = camera.getLandmarks()
 
-                # Set text of detecting
-                frames = image_processing.mask(frame, text)
+                if landmarks is not None:
+                    # Hard code for the landmarks
+                    for i, (x,y) in enumerate(landmarks):
 
-                cv2.imshow("Camera " + str(cam_id), cv2.resize(frames, tuple(int(x / 2) for x in camera.getDim())))
+                        # Small 5 shape landmakrs
+                        if i in [36, 39, 45, 42, 33]:
+
+                            # Affine transformation
+                            if i in [36, 45, 33]:
+                                cv2.circle(frame, (x, y), 8, (255, 255, 255), -1)
+                                cv2.putText(frame, 'Affine transform', (camera.getDim()[0]-450,camera.getDim()[1]-200),
+                                                                        cv2.FONT_HERSHEY_TRIPLEX, 1, (255, 255, 255))
+
+                            cv2.circle(frame, (x, y), 5, (255, 0, 255), -1)
+                            cv2.putText(frame, '5 point shape predictor', (camera.getDim()[0]-450, camera.getDim()[1]-150),
+                                        cv2.FONT_HERSHEY_TRIPLEX, 1, (255, 0, 255))
+                        else:
+                            cv2.circle(frame, (x, y), 4, (192, 162, 103), -1)
+                            cv2.putText(frame, '68 point shape predictor', (camera.getDim()[0]-450, camera.getDim()[1]-100),
+                                        cv2.FONT_HERSHEY_TRIPLEX, 1, (192, 162, 103))
+
+                cv2.imshow("Camera " + str(cam_id), cv2.resize(frame, tuple(int(x / 2) for x in camera.getDim())))
 
                 """
                 facial_recognition_thread.recognize_face(face)
@@ -96,7 +114,7 @@ while True:
                 """
 
             else:
-                cv2.imshow("Camera " + str(cam_id), cv2.resize(camera.getFrame(), tuple(int(x/2) for x in camera.getDim())))
+                cv2.imshow("Camera " + str(cam_id), cv2.resize(frame, tuple(int(x/2) for x in camera.getDim())))
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         for thread in camera_thread:

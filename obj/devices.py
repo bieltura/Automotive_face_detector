@@ -40,9 +40,14 @@ class FaceCamera(Camera):
     def __init__(self, cam_id):
         super().__init__(cam_id)
         self.face = None
+        self.landmarks = None
 
     def getFace(self):
         return self.face
 
-    def setFace(self, face):
+    def setFace(self, face, landmarks=None):
         self.face = face
+        self.landmarks = landmarks
+
+    def getLandmarks(self):
+        return self.landmarks

@@ -4,11 +4,12 @@ import dlib
 from utils import dlib_face_alignment
 
 # Scale factor! Adaptive to the dimensions!!!
-face_scale_factor = 1/15
+face_scale_factor = 1/12
 
 detector = dlib.get_frontal_face_detector()
 
 
+# Returns the face image aligned and the landmarks detected
 def detect_face(frame, face_dim):
 	if frame is not None:
 
@@ -21,14 +22,11 @@ def detect_face(frame, face_dim):
 		# Minimum size to detect face (50x50 px of face), 250 px from dmax.
 		frame_face = cv2.resize(frame, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
 
-		# Convert the frame to YUV ColorSpace
-		frame_yuv = cv2.cvtColor(frame_face, cv2.COLOR_BGR2YUV)[:, :, 0]
-
 		# Detect the bounding box
 		bb = getLargestFaceBoundingBox(frame_face)
 
 		if bb is None:
-			return None
+			return None, None
 
 		else:
 			# Re-scale the values to cut from original frame
@@ -39,10 +37,9 @@ def detect_face(frame, face_dim):
 
 			# Crop the image from the boundary box (the big)
 			return dlib_face_alignment.align(face_dim, frame, bb)
-
 	else:
 		# Break the loop and stop the thread
-		return None
+		return None, None
 
 
 # Find all face bounding boxes in an image
