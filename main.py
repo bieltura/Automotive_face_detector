@@ -6,6 +6,7 @@ from utils import image_processing
 from utils import demo
 from database import db_service as db
 import glob
+import time
 
 from nn import model
 import numpy as np
@@ -13,6 +14,7 @@ import numpy as np
 # Demonstration values:
 face_detector_demo = True
 face_recognition_demo = False
+fps_demo = False
 
 # Check number of cameras in Linux distribution cameras
 num_cameras = 0
@@ -36,7 +38,6 @@ for cam_id in range(num_cameras):
     camera_thread.append(thread)
     thread.start()
 
-
 # Neural Net Facial recognition start
 #facial_recognition_thread = FacialRecognition()
 
@@ -47,6 +48,12 @@ for cam_id in range(num_cameras):
 #nn4_small2_pretrained = model.create_model()
 #nn4_small2_pretrained.load_weights('nn/bin/nn4.small2.v1.h5')
 
+# Start time
+if fps_demo:
+    start = time.time()
+    num_frames = 0
+    average_frames = 10
+    fps = 0
 
 # Main program
 while True:
@@ -56,15 +63,25 @@ while True:
         frame = camera.getFrame()
         face = camera.getFace()
 
+        if fps_demo:
+            num_frames = float(num_frames + 1/num_cameras)
+            if num_frames > average_frames:
+                end = time.time()
+                fps = num_frames / (end - start)
+                num_frames = 0
+                start = end
+
+            cv2.putText(frame, '{0:.1f} FPS'.format(fps), (100, camera.getDim()[1] - 100),
+                        cv2.FONT_HERSHEY_TRIPLEX, 2, (255, 255, 255))
+
         if frame is not None:
             if face is not None:
 
                 print("Face detected in camera " + str(cam_id))
-                cv2.imshow("Face " + str(cam_id), face)
+                #cv2.imshow("Face " + str(cam_id), face)
 
                 if face_detector_demo:
-                    face_landmarked = demo.demo_face_detector(camera, frame)
-                    cv2.imshow("Camera " + str(cam_id), face_landmarked)
+                    frame = demo.demo_face_detector(camera, frame)
 
                 """
                 facial_recognition_thread.recognize_face(face)
@@ -98,8 +115,7 @@ while True:
                 print("")
                 """
 
-            else:
-                cv2.imshow("Camera " + str(cam_id), cv2.resize(frame, tuple(int(x/2) for x in camera.getDim())))
+            cv2.imshow("Camera " + str(cam_id), cv2.resize(frame, tuple(int(x * camera.getScaleFactor() *5) for x in camera.getDim())))
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         for thread in camera_thread:

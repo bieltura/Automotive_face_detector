@@ -31,7 +31,7 @@ class CameraFaceDetector(Thread):
 
                 if frame is not None:
                     # Detect if there is a face in the frame
-                    face, landmarks = self.detector.detect_face(frame, self.face_size)
+                    face, landmarks = self.detector.detect_face(frame, self.face_size, face_scale_factor=self.face_camera.getScaleFactor())
 
                     # Set the face of the detected face (with the dimensions specified) - even if it is None
                     self.face_camera.setFace(face, landmarks=landmarks)

@@ -2,20 +2,14 @@ import cv2
 import dlib
 from utils import dlib_face_alignment
 
-# Scale factor! Adaptive to the dimensions!!!
-face_scale_factor = 1/12
-
 detector = dlib.get_frontal_face_detector()
 
 
 # Returns the face image aligned and the landmarks detected
-def detect_face(frame, face_dim):
+def detect_face(frame, face_dim, face_scale_factor=1/10):
 
 	# Size of the image
 	height_frame, width_frame, channels = frame.shape
-
-	# Calculus of face_scale factor
-	# face_scale_factor = TODO
 
 	# Minimum size to detect face (50x50 px of face), 250 px from dmax.
 	frame_face = cv2.resize(frame, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))

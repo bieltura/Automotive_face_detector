@@ -25,4 +25,4 @@ def demo_face_detector(camera, frame):
                 cv2.putText(frame, '68 point shape predictor', (camera.getDim()[0] - 450, camera.getDim()[1] - 100),
                             cv2.FONT_HERSHEY_TRIPLEX, 1, (192, 162, 103))
 
-    return cv2.resize(frame, tuple(int(x / 2) for x in camera.getDim()))
+    return frame
