@@ -20,6 +20,10 @@ class Camera:
             "sensor_height": 5.37
         }
 
+        print("Camera {0} Registered: ".format(cam_id))
+        print("\tResolution: {0:.2f} Mpx".format(self.width*self.height/1000000))
+        print("\tFocal length: {0:.2f} mm".format(self.sensor["focal_length"]))
+
     def open(self):
         self.capture = cv2.VideoCapture(self.id)
 
@@ -46,7 +50,7 @@ class Camera:
 
 class FaceCamera(Camera):
 
-    def __init__(self, cam_id, min_face_size=40, max_face_dist=750):
+    def __init__(self, cam_id, min_face_size=40, max_face_dist=500):
         super().__init__(cam_id)
         self.face = None
         self.landmarks = None
@@ -54,7 +58,9 @@ class FaceCamera(Camera):
         # Compute scale factor for different focal length: Average human face height is 55cm
         face_px_height = self.sensor["focal_length"] * 400 * self.height / (max_face_dist * self.sensor["sensor_height"])
         self.scale_factor = min_face_size / face_px_height
-        print(face_px_height/min_face_size)
+
+        print("\tMax distance to be recognized: {0:.2f} cm".format(max_face_dist/10))
+        print("\tScale factor for analysis: 1/{0:.2f}".format(1/self.scale_factor))
 
     def getFace(self):
         return self.face

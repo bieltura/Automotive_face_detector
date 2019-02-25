@@ -20,7 +20,7 @@ class FacialRecognition(Thread):
         #json_file.close()
         #self.nn4_small2_pretrained = keras.models.model_from_json(loaded_model_json)
 
-        print("Loading the model ...")
+        print("Loading the facial recognition model ...")
         self.nn4_small2_pretrained = model.create_model()
         self.nn4_small2_pretrained.load_weights('nn/bin/nn4.small2.v1.h5')
 
@@ -57,7 +57,12 @@ class FacialRecognition(Thread):
         self.face = face
 
     def get_face_features(self):
-        return self.face_features
+        if self.face_features is None:
+            return None
+        else:
+            features = self.face_features
+            self.face_features = None
+            return features
 
     # State variable for stopping face detector service
     def stop(self):

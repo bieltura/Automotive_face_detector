@@ -1,4 +1,5 @@
 import cv2
+import time
 
 
 def demo_face_detector(camera, frame):
@@ -24,5 +25,18 @@ def demo_face_detector(camera, frame):
                 cv2.circle(frame, (x, y), 4, (192, 162, 103), -1)
                 cv2.putText(frame, '68 point shape predictor', (camera.getDim()[0] - 450, camera.getDim()[1] - 100),
                             cv2.FONT_HERSHEY_TRIPLEX, 1, (192, 162, 103))
+
+    return frame
+
+
+def compute_fps(num_frames, start):
+    end = time.time()
+    fps = num_frames / (end - start)
+    return fps, end
+
+
+def demo_fps(camera, frame, fps):
+    cv2.putText(frame, '{0:.1f} FPS'.format(fps), (100, camera.getDim()[1] - 100),
+                cv2.FONT_HERSHEY_TRIPLEX, 2, (255, 255, 255))
 
     return frame
