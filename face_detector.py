@@ -1,6 +1,8 @@
 from utils import dlib_face_detecion as detector
 from threading import Thread
 
+import time
+
 
 # Runs captures until a face is detected
 class CameraFaceDetector(Thread):
@@ -16,6 +18,7 @@ class CameraFaceDetector(Thread):
 
         # Variable to stop the camera thread if needed
         self.stopThread = False
+        self.pauseThread = False
 
     # Main thread method
     def run(self):
@@ -24,10 +27,10 @@ class CameraFaceDetector(Thread):
         self.face_camera.setFace(None)
 
         while True:
-            if not self.stopThread:
+            if not self.stopThread and not self.pauseThread:
 
                 # Get the frame
-                frame = self.face_camera.captureFrame()
+                frame = self.face_camera.getFrame()
 
                 if frame is not None:
                     # Detect if there is a face in the frame
@@ -37,12 +40,18 @@ class CameraFaceDetector(Thread):
                     self.face_camera.setFace(face, landmarks=landmarks)
 
             # End the thread and close the camera
-            else:
-                self.face_camera.close()
+            elif self.stopThread:
                 return
 
     # State variable for stopping face detector service
     def stop(self):
         # Stop this face_detector thread
         self.stopThread = True
+
+    def pause(self):
+        self.pauseThread = True
+
+    def resume(self):
+        self.pauseThread = False
+
 

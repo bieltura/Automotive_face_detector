@@ -1,9 +1,12 @@
 import cv2
+from threading import Thread
+from queue import Queue
 
 
-class Camera:
+class Camera(Thread):
 
-    def __init__(self, cam_id, focal_length=4.46):
+    def __init__(self, cam_id, focal_length=4.46, queueSize=128):
+        Thread.__init__(self)
         self.id = cam_id
         self.capture = None
         self.frame = None
@@ -20,6 +23,8 @@ class Camera:
             "sensor_height": 5.37
         }
 
+        self.Q = Queue(maxsize=queueSize)
+
         print("Camera {0} Registered: ".format(cam_id))
         print("\tResolution: {0:.2f} Mpx".format(self.width*self.height/1000000))
         print("\tFocal length: {0:.2f} mm".format(self.sensor["focal_length"]))
@@ -27,13 +32,13 @@ class Camera:
     def open(self):
         self.capture = cv2.VideoCapture(self.id)
 
-    def captureFrame(self):
-        if self.capture.isOpened():
-            ret, self.frame = self.capture.read()
-        else:
-            self.frame = None
-
-        return self.getFrame()
+    def run(self):
+        while True:
+            if self.capture.isOpened():
+                ret, self.frame = self.capture.read()
+            else:
+                self.frame = None
+                return
 
     def getFrame(self):
         return self.frame
@@ -59,7 +64,7 @@ class FaceCamera(Camera):
         face_px_height = self.sensor["focal_length"] * 400 * self.height / (max_face_dist * self.sensor["sensor_height"])
         self.scale_factor = min_face_size / face_px_height
 
-        print("\tMax distance to be recognized: {0:.2f} cm".format(max_face_dist/10))
+        print("\tMax distance to be recognized: {0:.2f} m".format(max_face_dist/1000))
         print("\tScale factor for analysis: 1/{0:.2f}".format(1/self.scale_factor))
 
     def getFace(self):

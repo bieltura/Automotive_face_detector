@@ -12,7 +12,7 @@ from utils.port_serial import arduino_serial
 # Demonstration values:
 face_detector_demo = False
 face_recognition_demo = False
-fps_demo = False
+fps_demo = True
 serial_demo = True
 
 # Check number of cameras in Linux distribution cameras
@@ -30,20 +30,24 @@ face_size = 96
 
 # Number of cameras in the system
 cameras = [None] * num_cameras
-camera_thread = []
+face_detector = [None] * num_cameras
+face_detected = [False] * num_cameras
 
-# Setup the cameras
-for cam_id in range(num_cameras):
-    cameras[cam_id] = devices.FaceCamera(cam_id)
-    thread = CameraFaceDetector(cameras[cam_id], face_size)
-    camera_thread.append(thread)
-    thread.start()
+# Currently one face_features for n cameras
+face_features = None
 
 # Neural Net Facial recognition start
 facial_recognition_thread = FacialRecognition()
 facial_recognition_thread.start()
 #nn4_small2_pretrained = model.create_model()
 #nn4_small2_pretrained.load_weights('nn/bin/nn4.small2.v1.h5')
+
+# Setup the cameras
+for cam_id in range(num_cameras):
+    cameras[cam_id] = devices.FaceCamera(cam_id)
+    face_detector[cam_id] = CameraFaceDetector(cameras[cam_id], face_size)
+    cameras[cam_id].start()
+    face_detector[cam_id].start()
 
 # Start time
 if fps_demo:
@@ -61,11 +65,19 @@ while True:
         face = camera.getFace()
 
         if frame is not None:
-            if face is not None:
+
+            if face is not None and not face_detected[cam_id]:
                 print("Face detected in camera " + str(cam_id))
-                #cv2.imshow("Face " + str(cam_id), face)
+                face_detected[cam_id] = True
+                cv2.imshow("Face " + str(cam_id), face)
 
                 start = time.time()
+
+                # Call the facial recognition thread with the face
+                facial_recognition_thread.recognize_face(face)
+
+                # Pause the face detector thread
+                face_detector[cam_id].pause()
 
                 # Face Landmarks demo
                 if face_detector_demo:
@@ -75,13 +87,16 @@ while True:
                 if serial_demo:
                     arduino.writeString("on")
 
-                # Call the facial recognition thread with the face
-                facial_recognition_thread.recognize_face(face)
-                face_features = None
+            cv2.imshow("Camera " + str(cam_id),
+                   cv2.resize(frame, tuple(int(x * camera.getScaleFactor() * 5) for x in camera.getDim())))
 
-                # Wait for the face features to be computed
-                while face_features is None:
-                    face_features = facial_recognition_thread.get_face_features()
+        # If the face has been detected check the face features
+        if face_detected[cam_id]:
+
+            face_features = facial_recognition_thread.get_face_features()
+
+            # If they are computed
+            if face_features is not None:
 
                 # Get all persons from database
                 persons = db.get_all_persons()
@@ -103,24 +118,29 @@ while True:
                 end = time.time()
                 print("Recognized as: {0} in {1:.2f}s".format(match, end-start))
                 print("")
-                time.sleep(2)
 
-            # Frames per second on screen
-            if fps_demo:
+                # Once recognized, resume the face detector thread
+                face_detected[cam_id] = False
+                face_detector[cam_id].resume()
+                camera.setFace(None)
 
-                # Count the frames of every camera and avg the fps
-                num_frames = float(num_frames + 1 / num_cameras)
-                if num_frames > average_frames:
-                    fps, end = demo.compute_fps(num_frames, start)
-                    start = end
-                    num_frames = 0
-                frame = demo.demo_fps(camera, frame, fps)
+        # Frames per second on screen
+        if fps_demo:
 
-            #cv2.imshow("Camera " + str(cam_id), cv2.resize(frame, tuple(int(x * camera.getScaleFactor() * 5) for x in camera.getDim())))
+            # Count the frames of every camera and avg the fps
+            num_frames = float(num_frames + 1 / num_cameras)
+            if num_frames > average_frames:
+                fps, end = demo.compute_fps(num_frames, start)
+                start = end
+                num_frames = 0
+            frame = demo.demo_fps(camera, frame, fps)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        for thread in camera_thread:
+        # Face detector removes cameras
+        for thread in face_detector:
             thread.stop()
+        for camera in cameras:
+            camera.close()
         facial_recognition_thread.stop()
         cv2.destroyAllWindows()
         break
