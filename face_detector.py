@@ -1,8 +1,6 @@
 from utils import dlib_face_detecion as detector
 from threading import Thread
 
-import time
-
 
 # Runs captures until a face is detected
 class CameraFaceDetector(Thread):

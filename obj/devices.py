@@ -1,6 +1,5 @@
 import cv2
 from threading import Thread
-from queue import Queue
 
 
 class Camera(Thread):
@@ -22,8 +21,6 @@ class Camera(Thread):
             "sensor_type": "1/2.7",
             "sensor_height": 5.37
         }
-
-        self.Q = Queue(maxsize=queueSize)
 
         print("Camera {0} Registered: ".format(cam_id))
         print("\tResolution: {0:.2f} Mpx".format(self.width*self.height/1000000))

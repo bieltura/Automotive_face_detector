@@ -86,6 +86,16 @@ while True:
                 # Arduino hardware demo
                 if serial_demo:
                     arduino.writeString("on")
+            # Frames per second on screen
+            if fps_demo:
+
+                # Count the frames of every camera and avg the fps
+                num_frames = float(num_frames + 1 / num_cameras)
+                if num_frames > average_frames:
+                    fps, end = demo.compute_fps(num_frames, start)
+                    start = end
+                    num_frames = 0
+                frame = demo.demo_fps(camera, frame, fps)
 
             cv2.imshow("Camera " + str(cam_id),
                    cv2.resize(frame, tuple(int(x * camera.getScaleFactor() * 5) for x in camera.getDim())))
@@ -122,25 +132,20 @@ while True:
                 # Once recognized, resume the face detector thread
                 face_detected[cam_id] = False
                 face_detector[cam_id].resume()
+                face_features = None
                 camera.setFace(None)
 
-        # Frames per second on screen
-        if fps_demo:
-
-            # Count the frames of every camera and avg the fps
-            num_frames = float(num_frames + 1 / num_cameras)
-            if num_frames > average_frames:
-                fps, end = demo.compute_fps(num_frames, start)
-                start = end
-                num_frames = 0
-            frame = demo.demo_fps(camera, frame, fps)
-
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        # Face detector removes cameras
+        # Face detector thread stop
         for thread in face_detector:
             thread.stop()
+
+        # Camera thread stop
         for camera in cameras:
             camera.close()
+
+        # Facial recognition Thread stop
         facial_recognition_thread.stop()
+
         cv2.destroyAllWindows()
         break
