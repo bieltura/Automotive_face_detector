@@ -37,8 +37,6 @@ face_features = None
 # Neural Net Facial recognition start
 facial_recognition_thread = FacialRecognition()
 facial_recognition_thread.start()
-#nn4_small2_pretrained = model.create_model()
-#nn4_small2_pretrained.load_weights('nn/bin/nn4.small2.v1.h5')
 
 # Setup the cameras
 for cam_id in range(num_cameras):
