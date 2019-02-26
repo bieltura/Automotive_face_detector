@@ -1,18 +1,16 @@
 import cv2
 import glob
 import time
-import numpy as np
 from obj import devices
 from face_detector import CameraFaceDetector
 from face_recognition import FacialRecognition
 from utils import demo
-from database import db_service as db
 from utils.port_serial import arduino_serial
 
 # Demonstration values:
 face_detector_demo = False
 face_recognition_demo = False
-fps_demo = False
+fps_demo = True
 serial_demo = False
 
 # Check number of cameras in Linux distribution cameras
@@ -74,12 +72,12 @@ while True:
                 if face is not None:
                     print("Face detected in camera " + str(cam_id))
 
+                    start = time.time()
+
                     # Pause the face detector thread by setting a Nonr frame
                     face_detector[cam_id].detect(None)
                     face_detected[cam_id] = True
-                    #cv2.imshow("Face " + str(cam_id), face)
-
-                    start = time.time()
+                    cv2.imshow("Face " + str(cam_id), face)
 
                     # Call the facial recognition thread with the face
                     facial_recognition_thread.recognize_face(face)
@@ -95,22 +93,10 @@ while True:
         # If the face has been detected check the face features
         if face_detected[cam_id]:
 
-            face_features = facial_recognition_thread.get_face_features()
+            match = facial_recognition_thread.get_match()
 
             # If they are computed
-            if face_features is not None:
-
-                # Get all persons from database
-                persons = db.get_all_persons()
-                threshold = 0.56
-                match = "unknown"
-
-                # Compare the distance with each person from DB
-                for i, person in enumerate(persons):
-                    distance = np.sum(np.square(face_features - np.fromstring(person.face_features, np.float32)))
-                    if distance < threshold:
-                        match = person.name
-                        break
+            if match:
 
                 # Arduino hardware demo
                 if serial_demo:
@@ -121,9 +107,8 @@ while True:
                 print("Recognized as: {0} in {1:.2f}s".format(match, end - start))
                 print("")
 
-                # Once recognized, resume the face detector thread
+                # Once recognized, resume the face detector
                 face_detected[cam_id] = False
-                face_features = None
 
         # Frames per second on screen
         if fps_demo:

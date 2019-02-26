@@ -1,6 +1,7 @@
 from threading import Thread, Lock
 from nn import model
 import numpy as np
+from database import db_service as db
 import tensorflow as tf
 from tensorflow import keras
 
@@ -10,6 +11,7 @@ class FacialRecognition(Thread):
 
         self.face = None
         self.face_features = None
+        self.match = None
 
         self.nn4_small2_pretrained = None
 
@@ -43,12 +45,28 @@ class FacialRecognition(Thread):
                     # scale RGB values to interval [0,1]
                     face = (self.face / 255.).astype(np.float32)
 
+                    # Reset the values, make sure we lock the enter for more faces
+                    self.face = None
+
                     self.nn4_small2_pretrained.load_weights('nn/bin/nn4.small2.v1.h5')
 
-                    # Maybe we can align here?
+                    # Forward pass NN
                     self.face_features = self.nn4_small2_pretrained.predict(np.expand_dims(face, axis=0))[0]
 
-                    self.face = None
+                    if self.face_features is not None:
+
+                        # Get all persons from database
+                        persons = db.get_all_persons()
+                        threshold = 0.56
+                        self.match = "unknown"
+
+                        # Compare the distance with each person from DB
+                        for i, person in enumerate(persons):
+                            distance = np.sum(
+                                np.square(self.face_features - np.fromstring(person.face_features, np.float32)))
+                            if distance < threshold:
+                                self.match = person.name
+                                break
 
             else:
                 return
@@ -56,15 +74,11 @@ class FacialRecognition(Thread):
     def recognize_face(self, face):
         self.face = face
 
-    def get_face_features(self):
-        if self.face_features is None:
-            return None
-        else:
-            features = self.face_features
-            self.face_features = None
-            return features
-
     # State variable for stopping face detector service
     def stop(self):
-        # Stop this face_detector thread
         self.stopThread = True
+
+    def get_match(self):
+        match = self.match
+        self.match = None
+        return match
