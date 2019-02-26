@@ -5,14 +5,17 @@ from threading import Thread
 # Runs captures until a face is detected
 class CameraFaceDetector(Thread):
 
-    def __init__(self, face_camera, face_size):
+    def __init__(self, scale_factor, face_size):
         Thread.__init__(self)
 
-        self.face_camera = face_camera
+        self.scale_factor = scale_factor
         self.face_size = face_size
+        self.frame = None
 
         # Every face camera has a detector attribute
         self.detector = detector
+        self.face = None
+        self.landmarks = None
 
         # Variable to stop the camera thread if needed
         self.stopThread = False
@@ -21,21 +24,14 @@ class CameraFaceDetector(Thread):
     # Main thread method
     def run(self):
 
-        # Assume no face detected when camera is first up
-        self.face_camera.setFace(None)
-
         while True:
-            if not self.stopThread and not self.pauseThread:
+            if not self.stopThread:
 
-                # Get the frame
-                frame = self.face_camera.getFrame()
-
-                if frame is not None:
+                if self.frame is None:
+                    self.face = None
+                else:
                     # Detect if there is a face in the frame
-                    face, landmarks = self.detector.detect_face(frame, self.face_size, face_scale_factor=self.face_camera.getScaleFactor())
-
-                    # Set the face of the detected face (with the dimensions specified) - even if it is None
-                    self.face_camera.setFace(face, landmarks=landmarks)
+                    self.face, self.landmarks = self.detector.detect_face(self.frame, self.face_size, face_scale_factor=self.scale_factor)
 
             # End the thread and close the camera
             elif self.stopThread:
@@ -46,10 +42,11 @@ class CameraFaceDetector(Thread):
         # Stop this face_detector thread
         self.stopThread = True
 
-    def pause(self):
-        self.pauseThread = True
+    def getFace(self):
+        return self.face
 
-    def resume(self):
-        self.pauseThread = False
+    def getLandmarks(self):
+        return self.landmarks
 
-
+    def detect(self, frame):
+        self.frame = frame

@@ -29,6 +29,9 @@ class Camera(Thread):
     def open(self):
         self.capture = cv2.VideoCapture(self.id)
 
+    def close(self):
+        self.capture.release()
+
     def run(self):
         while True:
             if self.capture.isOpened():
@@ -42,9 +45,6 @@ class Camera(Thread):
 
     def getSensorInfo(self):
         return self.sensor
-
-    def close(self):
-        self.capture.release()
 
     def getDim(self):
         return self.width, self.height
@@ -64,15 +64,5 @@ class FaceCamera(Camera):
         print("\tMax distance to be recognized: {0:.2f} m".format(max_face_dist/1000))
         print("\tScale factor for analysis: 1/{0:.2f}".format(1/self.scale_factor))
 
-    def getFace(self):
-        return self.face
-
-    def setFace(self, face, landmarks=None):
-        self.face = face
-        self.landmarks = landmarks
-
     def getScaleFactor(self):
         return self.scale_factor
-
-    def getLandmarks(self):
-        return self.landmarks
