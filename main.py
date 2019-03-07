@@ -10,8 +10,8 @@ from utils.port_serial import arduino_serial
 # Demonstration values:
 face_detector_demo = False
 face_recognition_demo = False
-fps_demo = True
-serial_demo = False
+fps_demo = False
+serial_demo = True
 
 # Check number of cameras in Linux distribution cameras
 num_cameras = 0
@@ -20,8 +20,8 @@ for camera in glob.glob("/dev/video?"):
 
 # Check number of port serials in Linux distribution
 if serial_demo:
-    for port, camera in enumerate(glob.glob("/dev/ttyACM?")):
-        arduino = arduino_serial('/dev/ttyACM'+str(port))
+    for port, camera in enumerate(glob.glob("/dev/ttyUSB?")):
+        arduino = arduino_serial('/dev/ttyUSB'+str(port))
 
 # Face size (square in px for CNN)
 face_size = 96
@@ -70,6 +70,10 @@ while True:
                 if face is not None:
                     print("Face detected in camera " + str(cam_id))
 
+                    # Arduino hardware demo
+                    if serial_demo:
+                        arduino.writeString("Detecting ...")
+
                     start = time.time()
 
                     # Pause the face detector thread by setting a Nonr frame
@@ -83,10 +87,6 @@ while True:
                     # Face Landmarks demo
                     if face_detector_demo:
                         frame = demo.demo_face_detector(camera, frame)
-
-                    # Arduino hardware demo
-                    if serial_demo:
-                        arduino.writeString("on")
 
         # If the face has been detected check the face features
         if face_detected[cam_id]:

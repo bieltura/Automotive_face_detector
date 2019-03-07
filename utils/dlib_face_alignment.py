@@ -76,7 +76,7 @@ def align(imgDim, rgbImg, bb=None):
     thumbnail = cv2.warpAffine(rgbImg, H, (imgDim, imgDim))
 
     # Return the landmarks
-    return thumbnail, npLandmarks
+    return thumbnail, npLandmarks, bb
 
 
 # Find the landmarks of a face

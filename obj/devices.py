@@ -4,7 +4,7 @@ from threading import Thread
 
 class Camera(Thread):
 
-    def __init__(self, cam_id, focal_length=4.46, queueSize=128):
+    def __init__(self, cam_id, focal_length=4.46):
         Thread.__init__(self)
         self.id = cam_id
         self.capture = None
@@ -52,7 +52,7 @@ class Camera(Thread):
 
 class FaceCamera(Camera):
 
-    def __init__(self, cam_id, min_face_size=40, max_face_dist=500):
+    def __init__(self, cam_id, min_face_size=40, max_face_dist=700):
         super().__init__(cam_id)
         self.face = None
         self.landmarks = None

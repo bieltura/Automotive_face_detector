@@ -1,16 +1,21 @@
 from utils import dlib_face_detecion as detector
+from stereo import stereo_vision as detector_3d
 from threading import Thread
 
 
 # Detect face is frame
 class CameraFaceDetector(Thread):
 
-    def __init__(self, scale_factor, face_size):
+    def __init__(self, scale_factor, face_size, stereo=False):
         Thread.__init__(self)
 
         self.scale_factor = scale_factor
         self.face_size = face_size
+        self.stereo = stereo
         self.frame = None
+        if self.stereo:
+            self.second_frame = None
+            self.detecor_3d = detector_3d
 
         # Every face camera has a detector attribute
         self.detector = detector
@@ -30,7 +35,17 @@ class CameraFaceDetector(Thread):
                     self.face = None
                 else:
                     # Detect if there is a face in the frame
-                    self.face, self.landmarks = self.detector.detect_face(self.frame, self.face_size, face_scale_factor=self.scale_factor)
+                    face, self.landmarks, bb = self.detector.detect_face(self.frame, self.face_size, face_scale_factor=self.scale_factor)
+
+                    # 3D recognition:
+                    if self.stereo:
+                        if self.second_frame is not None:
+                            if detector_3d.detect_3d_face(self.frame, self.second_frame, bb):
+                                self.face = face
+                        else:
+                            self.face = None
+                    else:
+                        self.face = face
 
             # End the thread and close the camera
             elif self.stopThread:
@@ -46,5 +61,7 @@ class CameraFaceDetector(Thread):
     def getLandmarks(self):
         return self.landmarks
 
-    def detect(self, frame):
+    def detect(self, frame, second_frame = None):
         self.frame = frame
+        if self.stereo:
+            self.second_frame = second_frame
