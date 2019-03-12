@@ -11,7 +11,7 @@ from utils.port_serial import arduino_serial
 face_detector_demo = False
 face_recognition_demo = False
 fps_demo = False
-serial_demo = True
+serial_demo = False
 
 # Check number of cameras in Linux distribution cameras
 num_cameras = 0

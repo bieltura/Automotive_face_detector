@@ -21,7 +21,6 @@ filename_dL = os.path.join("stereo/models/", "{}.npy".format("distL"))
 filename_chR = os.path.join("stereo/models/", "{}.npy".format("ChessImaR"))
 
 # Read
-print(filenameR)
 imgpointsR = np.load(filenameR)
 imgpointsL = np.load(filenameL)
 objpoints = np.load(filename_op)
@@ -99,14 +98,18 @@ wls_filter.setSigmaColor(sigma)
 # ***** Starting the StereoVision *****
 # *************************************
 
-# Call the two cameras
-#CamR = cv2.VideoCapture(0)  # Wenn 0 then Right Cam and wenn 2 Left Cam
-#CamL = cv2.VideoCapture(1)
+def detect_3d_face(frameRight, frameLeft, ROI=None, face_scale_factor=1/10):
 
-def detect_3d_face(frameR, frameL, ROI=None):
+    # Size of the image
+    height_frame, width_frame, channels = frameRight.shape
 
-    frameR = cv2.resize(frameR, (480, 320))
-    frameL = cv2.resize(frameL, (480, 320))
+    # Minimum size to detect face (50x50 px of face), 250 px from dmax.
+    #frameR = cv2.resize(frameRight, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
+    #frameL = cv2.resize(frameLeft, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
+
+    # Hard coded resize function TODO
+    frameR = cv2.resize(frameRight, (480, 320))
+    frameL = cv2.resize(frameLeft, (480, 320))
 
     # Rectify the images on rotation and alignement
     # Rectify the image using the calibration parameters founds during the initialisation
@@ -117,20 +120,25 @@ def detect_3d_face(frameR, frameL, ROI=None):
     grayR = cv2.cvtColor(Right_nice, cv2.COLOR_BGR2GRAY)
     grayL = cv2.cvtColor(Left_nice, cv2.COLOR_BGR2GRAY)
 
-    # Compute the 2 images for the Depth_image
-
     # Compute para el stereo
     dispL = stereo.compute(grayL, grayR)
     dispR = stereoR.compute(grayR, grayL)
 
-    # Using the WLS filter
-
     # Disparity map left, left view, filtered_disparity map, disparity map right, ROI=rect (to be done)
-    filteredImg = wls_filter.filter(dispL, grayL, None, dispR, ROI=ROI)
-    filteredImg = cv2.normalize(src=filteredImg, dst=filteredImg, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX);
-    filteredImg = np.uint8(filteredImg)
+    if ROI is not None:
 
-    # Change the Color of the Picture into an Ocean Color_Map
-    # filt_Color = cv2.applyColorMap(filteredImg,cv2.COLORMAP_OCEAN)
+        filteredImg = wls_filter.filter(dispL, grayL, None, dispR)
+        filteredImg = cv2.normalize(src=filteredImg, dst=filteredImg, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX)
+        filteredImg = np.uint8(filteredImg)
 
-    return True
+        # Change the Color of the Picture into an Ocean Color_Map
+        filt_Color = cv2.applyColorMap(filteredImg, cv2.COLORMAP_OCEAN)
+
+        # Get the face with ROI
+        filtered_face = filteredImg[int(ROI.top() * 320 / height_frame):int(ROI.bottom() * 320 / height_frame), int(ROI.left() * 480/width_frame):int(ROI.right() * 480/width_frame),]
+
+        return filtered_face
+    else:
+        return None
+
+

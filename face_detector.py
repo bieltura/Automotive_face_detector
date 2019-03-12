@@ -15,7 +15,8 @@ class CameraFaceDetector(Thread):
         self.frame = None
         if self.stereo:
             self.second_frame = None
-            self.detecor_3d = detector_3d
+            self.detector_3d = detector_3d
+            self.face_3d = None
 
         # Every face camera has a detector attribute
         self.detector = detector
@@ -40,8 +41,8 @@ class CameraFaceDetector(Thread):
                     # 3D recognition:
                     if self.stereo:
                         if self.second_frame is not None:
-                            if detector_3d.detect_3d_face(self.frame, self.second_frame, bb):
-                                self.face = face
+                            self.face_3d = detector_3d.detect_3d_face(self.frame, self.second_frame, ROI=bb, face_scale_factor=self.scale_factor)
+                            self.face = face
                         else:
                             self.face = None
                     else:
@@ -58,10 +59,13 @@ class CameraFaceDetector(Thread):
     def getFace(self):
         return self.face
 
+    def get3dFace(self):
+        return self.face_3d
+
     def getLandmarks(self):
         return self.landmarks
 
-    def detect(self, frame, second_frame = None):
+    def detect(self, frame, second_frame=None):
         self.frame = frame
         if self.stereo:
             self.second_frame = second_frame
