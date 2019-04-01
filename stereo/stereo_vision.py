@@ -6,12 +6,12 @@ import os
 criteria_stereo = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
 # Arrays to store object points and image points from all images
-objpoints = []  # 3d points in real world space
-imgpointsR = []  # 2d points in image plane
+objpoints = []
+imgpointsR = []
 imgpointsL = []
 
 ##===========================================================
-filenameL = os.path.join("stereo/models/", "{}.npy".format("imgpointsL"))
+filenameL= os.path.join("stereo/models/", "{}.npy".format("imgpointsL"))
 filenameR = os.path.join("stereo/models/", "{}.npy".format("imgpointsR"))
 filename_op = os.path.join("stereo/models/", "{}.npy".format("objpoints"))
 filename_mtR = os.path.join("stereo/models/", "{}.npy".format("mtxR"))
@@ -30,43 +30,30 @@ mtxL = np.load(filename_mtL)
 distL = np.load(filename_dL)
 ChessImaR = np.load(filename_chR)
 
-print('Cameras Ready to use')
-
-# ********************************************
-# ***** Calibrate the Cameras for Stereo *****
-# ********************************************
+calibration_size = (640, 360)
 
 # StereoCalibrate function
 flags = 0
 flags |= cv2.CALIB_FIX_INTRINSIC
 
-retS, MLS, dLS, MRS, dRS, R, T, E, F = cv2.stereoCalibrate(objpoints,
-                                                           imgpointsL,
-                                                           imgpointsR,
-                                                           mtxL,
-                                                           distL,
-                                                           mtxR,
-                                                           distR,
-                                                           ChessImaR.shape[::-1],
-                                                           criteria_stereo,
-                                                           flags)
+retS, MLS, dLS, MRS, dRS, R, T, E, F = cv2.stereoCalibrate(objectPoints=objpoints,
+                                                           imagePoints1=imgpointsL,
+                                                           imagePoints2=imgpointsR,
+                                                           cameraMatrix1=mtxL,
+                                                           distCoeffs1=distL,
+                                                           cameraMatrix2=mtxR,
+                                                           distCoeffs2=distR,
+                                                           imageSize=ChessImaR.shape[::-1],
+                                                           criteria=criteria_stereo,
+                                                           flags=flags)
 
-# StereoRectify function
-rectify_scale = 0  # if 0 image croped, if 1 image nor croped
-RL, RR, PL, PR, Q, roiL, roiR = cv2.stereoRectify(MLS, dLS, MRS, dRS,
-                                                  ChessImaR.shape[::-1], R, T,
-                                                  rectify_scale,
-                                                  (0, 0))  # last paramater is alpha, if 0= croped, if 1= not croped
+# if 0 image croped, if 1 image nor croped
+rectify_scale = 0
+RL, RR, PL, PR, Q, roiL, roiR = cv2.stereoRectify(MLS, dLS, MRS, dRS, ChessImaR.shape[::-1], R, T, rectify_scale, (0, 0))
+
 # initUndistortRectifyMap function
-Left_Stereo_Map = cv2.initUndistortRectifyMap(MLS, dLS, RL, PL,
-                                              ChessImaR.shape[::-1],
-                                              cv2.CV_16SC2)  # cv2.CV_16SC2 this format enables us the programme to work faster
-Right_Stereo_Map = cv2.initUndistortRectifyMap(MRS, dRS, RR, PR,
-                                               ChessImaR.shape[::-1], cv2.CV_16SC2)
-
-# *******************************************
-# ***** Parameters for the StereoVision *****
-# *******************************************
+Left_Stereo_Map = cv2.initUndistortRectifyMap(MLS, dLS, RL, PL, ChessImaR.shape[::-1], cv2.CV_16SC2)
+Right_Stereo_Map = cv2.initUndistortRectifyMap(MRS, dRS, RR, PR, ChessImaR.shape[::-1], cv2.CV_16SC2)
 
 # Create StereoSGBM and prepare all parameters
 window_size = 5
@@ -83,62 +70,64 @@ stereo = cv2.StereoSGBM_create(minDisparity=min_disp,
                                P1=8 * 1 * window_size ** 2,
                                P2=32 * 1 * window_size ** 2)
 
+
 # Used for the filtered image
 stereoR = cv2.ximgproc.createRightMatcher(stereo)  # Create another stereo for right this time
 
 # WLS FILTER Parameters
-lmbda = 80000  # 80000
-sigma = 1.8  # 1.8
+lmbda = 80000
+sigma = 1.8
 
 wls_filter = cv2.ximgproc.createDisparityWLSFilter(matcher_left=stereo)
 wls_filter.setLambda(lmbda)
 wls_filter.setSigmaColor(sigma)
 
-# *************************************
-# ***** Starting the StereoVision *****
-# *************************************
 
-def detect_3d_face(frameRight, frameLeft, ROI=None, face_scale_factor=1/10):
+def detect_3d_face(frameRight, frameLeft, ROI=None):
 
-    # Size of the image
-    height_frame, width_frame, channels = frameRight.shape
+    if frameRight is not None and frameLeft is not None:
 
-    # Minimum size to detect face (50x50 px of face), 250 px from dmax.
-    #frameR = cv2.resize(frameRight, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
-    #frameL = cv2.resize(frameLeft, (int(width_frame * face_scale_factor), int(height_frame * face_scale_factor)))
+        # Size of the image
+        height_frame, width_frame, channels = frameRight.shape
 
-    # Hard coded resize function TODO
-    frameR = cv2.resize(frameRight, (480, 320))
-    frameL = cv2.resize(frameLeft, (480, 320))
+        # Resize to the calibration
+        frameR = cv2.resize(frameRight, calibration_size)
+        frameL = cv2.resize(frameLeft, calibration_size)
 
-    # Rectify the images on rotation and alignement
-    # Rectify the image using the calibration parameters founds during the initialisation
-    Left_nice = cv2.remap(frameL, Left_Stereo_Map[0], Left_Stereo_Map[1], cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
-    Right_nice = cv2.remap(frameR, Right_Stereo_Map[0], Right_Stereo_Map[1], cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+        # Rectify the images on rotation and alignement
+        Left_nice = cv2.remap(frameL, Left_Stereo_Map[0], Left_Stereo_Map[1], cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
+        Right_nice = cv2.remap(frameR, Right_Stereo_Map[0], Right_Stereo_Map[1], cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
 
-    # Convert from color(BGR) to gray
-    grayR = cv2.cvtColor(Right_nice, cv2.COLOR_BGR2GRAY)
-    grayL = cv2.cvtColor(Left_nice, cv2.COLOR_BGR2GRAY)
+        # Convert from color(BGR) to gray
+        grayR = cv2.cvtColor(Right_nice, cv2.COLOR_BGR2GRAY)
+        grayL = cv2.cvtColor(Left_nice, cv2.COLOR_BGR2GRAY)
 
-    # Compute para el stereo
-    dispL = stereo.compute(grayL, grayR)
-    dispR = stereoR.compute(grayR, grayL)
+        # Filter the noise to make the stereo match
+        grayR = cv2.fastNlMeansDenoising(grayR, None, h=4)
+        grayL = cv2.fastNlMeansDenoising(grayL, None, h=4)
 
-    # Disparity map left, left view, filtered_disparity map, disparity map right, ROI=rect (to be done)
-    if ROI is not None:
+        # Compute para el stereo
+        dispL = stereo.compute(grayL, grayR)
+        dispR = stereoR.compute(grayR, grayL)
 
-        filteredImg = wls_filter.filter(dispL, grayL, None, dispR)
-        filteredImg = cv2.normalize(src=filteredImg, dst=filteredImg, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX)
-        filteredImg = np.uint8(filteredImg)
+        # If a face ROI is given
+        if ROI is not None:
 
-        # Change the Color of the Picture into an Ocean Color_Map
-        filt_Color = cv2.applyColorMap(filteredImg, cv2.COLORMAP_OCEAN)
+            # Disparity map left, left view, filtered_disparity map, disparity map right
+            filteredImg = wls_filter.filter(dispL, grayL, None, dispR)
+            filteredImg = cv2.normalize(src=filteredImg, dst=filteredImg, beta=0, alpha=255, norm_type=cv2.NORM_MINMAX)
+            filteredImg = np.uint8(filteredImg)
 
-        # Get the face with ROI
-        filtered_face = filteredImg[int(ROI.top() * 320 / height_frame):int(ROI.bottom() * 320 / height_frame), int(ROI.left() * 480/width_frame):int(ROI.right() * 480/width_frame),]
+            # Resize the ROI to the disparity map
+            top = int(ROI.top() * calibration_size[1] / height_frame)
+            bottom = int(ROI.bottom() * calibration_size[1] / height_frame)
+            left = int(ROI.left() * calibration_size[0] / width_frame)
+            right = int(ROI.right() * calibration_size[0] / width_frame)
 
-        return filtered_face
-    else:
-        return None
+            # Get the face with ROI
+            filtered_face = filteredImg[top:bottom, left:right]
 
+            return filtered_face, filteredImg
 
+        else:
+            return None, None

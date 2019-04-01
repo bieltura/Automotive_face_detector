@@ -52,7 +52,7 @@ class Camera(Thread):
 
 class FaceCamera(Camera):
 
-    def __init__(self, cam_id, min_face_size=40, max_face_dist=700):
+    def __init__(self, cam_id, min_face_size=40, max_face_dist=800):
         super().__init__(cam_id)
         self.face = None
         self.landmarks = None

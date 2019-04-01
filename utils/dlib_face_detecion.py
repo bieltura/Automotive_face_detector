@@ -18,7 +18,7 @@ def detect_face(frame, face_dim, face_scale_factor=1/10):
 	bb = getLargestFaceBoundingBox(frame_face)
 
 	if bb is None:
-		return None, None, None
+		return None, None, bb
 
 	else:
 		# Re-scale the values to cut from original frame
