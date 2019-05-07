@@ -11,14 +11,14 @@ imgpointsR = []
 imgpointsL = []
 
 ##===========================================================
-filenameL= os.path.join("stereo/models/", "{}.npy".format("imgpointsL"))
-filenameR = os.path.join("stereo/models/", "{}.npy".format("imgpointsR"))
-filename_op = os.path.join("stereo/models/", "{}.npy".format("objpoints"))
-filename_mtR = os.path.join("stereo/models/", "{}.npy".format("mtxR"))
-filename_dR = os.path.join("stereo/models/", "{}.npy".format("distR"))
-filename_mtL = os.path.join("stereo/models/", "{}.npy".format("mtxL"))
-filename_dL = os.path.join("stereo/models/", "{}.npy".format("distL"))
-filename_chR = os.path.join("stereo/models/", "{}.npy".format("ChessImaR"))
+filenameL= os.path.join("stereo_vision/calibration/", "{}.npy".format("imgpointsL"))
+filenameR = os.path.join("stereo_vision/calibration/", "{}.npy".format("imgpointsR"))
+filename_op = os.path.join("stereo_vision/calibration/", "{}.npy".format("objpoints"))
+filename_mtR = os.path.join("stereo_vision/calibration/", "{}.npy".format("mtxR"))
+filename_dR = os.path.join("stereo_vision/calibration/", "{}.npy".format("distR"))
+filename_mtL = os.path.join("stereo_vision/calibration/", "{}.npy".format("mtxL"))
+filename_dL = os.path.join("stereo_vision/calibration/", "{}.npy".format("distL"))
+filename_chR = os.path.join("stereo_vision/calibration/", "{}.npy".format("ChessImaR"))
 
 # Read
 imgpointsR = np.load(filenameR)

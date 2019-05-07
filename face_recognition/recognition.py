@@ -1,5 +1,5 @@
 from threading import Thread, Lock
-from nn import model
+from face_recognition import model
 import numpy as np
 from database import db_service as db
 import tensorflow as tf
@@ -24,7 +24,7 @@ class FacialRecognition(Thread):
 
         print("Loading the facial recognition model ...")
         self.nn4_small2_pretrained = model.create_model()
-        self.nn4_small2_pretrained.load_weights('nn/bin/nn4.small2.v1.h5')
+        self.nn4_small2_pretrained.load_weights('face_recognition/bin/nn4.small2.v1.h5')
 
         # Tell the model is loaded in a different thread
         self.nn4_small2_pretrained._make_predict_function()
@@ -48,7 +48,7 @@ class FacialRecognition(Thread):
                     # Reset the values, make sure we lock the enter for more faces
                     self.face = None
 
-                    self.nn4_small2_pretrained.load_weights('nn/bin/nn4.small2.v1.h5')
+                    self.nn4_small2_pretrained.load_weights('face_recognition/bin/nn4.small2.v1.h5')
 
                     # Forward pass NN
                     self.face_features = self.nn4_small2_pretrained.predict(np.expand_dims(face, axis=0))[0]

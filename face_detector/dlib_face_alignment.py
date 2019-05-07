@@ -46,7 +46,7 @@ SMALL_TEMPLATE = BIG_TEMPLATE[[45, 42, 36, 39, 33]]
 #landmarkIndices = [0, 2, 4]
 #TEMPLATE = SMALL_TEMPLATE
 
-predictor = dlib.shape_predictor('data/dlib/shape_predictor_68_face_landmarks.dat')
+predictor = dlib.shape_predictor('face_detector/data/dlib/shape_predictor_68_face_landmarks.dat')
 landmarkIndices = [36, 45, 33]
 TEMPLATE = BIG_TEMPLATE
 

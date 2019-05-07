@@ -1,6 +1,6 @@
 import cv2
 import dlib
-from utils import dlib_face_alignment
+from face_detector import dlib_face_alignment
 
 detector = dlib.get_frontal_face_detector()
 

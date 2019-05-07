@@ -1,11 +1,11 @@
 import cv2
 import glob
 import time
-from obj import devices
-from face_detector import CameraFaceDetector
-from face_recognition import FacialRecognition
+from devices import cameras
+from face_detector.detector import CameraFaceDetector
+from face_recognition.recognition import FacialRecognition
 from utils import demo
-from utils.port_serial import arduino_serial
+from devices.arduino import arduino_serial
 
 # Demonstration values:
 face_detector_demo = False
@@ -17,6 +17,7 @@ serial_demo = False
 num_cameras = 0
 for camera in glob.glob("/dev/video?"):
     num_cameras += 1
+    break
 
 # Check number of port serials in Linux distribution
 if serial_demo:
@@ -27,7 +28,7 @@ if serial_demo:
 face_size = 96
 
 # Number of cameras in the system
-cameras = [None] * num_cameras
+cam = [None] * num_cameras
 face_detector = [None] * num_cameras
 face_detected = [False] * num_cameras
 
@@ -40,9 +41,9 @@ facial_recognition_thread = FacialRecognition()
 
 # Setup the cameras
 for cam_id in range(num_cameras):
-    cameras[cam_id] = devices.FaceCamera(cam_id)
-    face_detector[cam_id] = CameraFaceDetector(cameras[cam_id].getScaleFactor(), face_size)
-    cameras[cam_id].start()
+    cam[cam_id] = cameras.FaceCamera(cam_id)
+    face_detector[cam_id] = CameraFaceDetector(cam[cam_id].getScaleFactor(), face_size)
+    cam[cam_id].start()
     face_detector[cam_id].start()
 
 # Start time
@@ -55,7 +56,7 @@ if fps_demo:
 # Main program
 while True:
 
-    for cam_id, camera in enumerate(cameras):
+    for cam_id, camera in enumerate(cam):
 
         # Get the frame from the camera
         frame = camera.getFrame()
@@ -65,7 +66,7 @@ while True:
 
             if frame is not None:
                 face_detector[cam_id].detect(frame)
-                face = face_detector[cam_id].getFace()
+                face, landmarkFace = face_detector[cam_id].getFace()
 
                 if face is not None:
                     print("Face detected in camera " + str(cam_id))
@@ -76,13 +77,13 @@ while True:
 
                     start = time.time()
 
-                    # Pause the face detector thread by setting a Nonr frame
+                    # Pause the face detector thread by setting a None frame
                     face_detector[cam_id].detect(None)
-                    face_detected[cam_id] = True
+                    #face_detected[cam_id] = True
                     cv2.imshow("Face " + str(cam_id), face)
 
                     # Call the facial recognition thread with the face
-                    facial_recognition_thread.recognize_face(face)
+                    #facial_recognition_thread.recognize_face(face)
 
                     # Face Landmarks demo
                     if face_detector_demo:
@@ -129,7 +130,7 @@ while True:
             thread.stop()
 
         # Camera thread stop
-        for camera in cameras:
+        for camera in cam:
             camera.close()
 
         # Facial recognition Thread stop

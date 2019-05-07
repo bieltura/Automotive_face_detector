@@ -9,8 +9,8 @@ from keras.layers.pooling import MaxPooling2D, AveragePooling2D
 from keras.models import Model
 from keras import backend as K
 
-import nn.utils
-from nn.utils import LRN2D
+import face_recognition.utils
+from face_recognition.utils import LRN2D
 
 def create_model():
     myInput = Input(shape=(96, 96, 3))
@@ -92,7 +92,7 @@ def create_model():
     inception_3b = concatenate([inception_3b_3x3, inception_3b_5x5, inception_3b_pool, inception_3b_1x1], axis=3)
 
     # Inception3c
-    inception_3c_3x3 = nn.utils.conv2d_bn(inception_3b,
+    inception_3c_3x3 = face_recognition.utils.conv2d_bn(inception_3b,
                                        layer='inception_3c_3x3',
                                        cv1_out=128,
                                        cv1_filter=(1, 1),
@@ -101,7 +101,7 @@ def create_model():
                                        cv2_strides=(2, 2),
                                        padding=(1, 1))
 
-    inception_3c_5x5 = nn.utils.conv2d_bn(inception_3b,
+    inception_3c_5x5 = face_recognition.utils.conv2d_bn(inception_3b,
                                        layer='inception_3c_5x5',
                                        cv1_out=32,
                                        cv1_filter=(1, 1),
@@ -116,7 +116,7 @@ def create_model():
     inception_3c = concatenate([inception_3c_3x3, inception_3c_5x5, inception_3c_pool], axis=3)
 
     #inception 4a
-    inception_4a_3x3 = nn.utils.conv2d_bn(inception_3c,
+    inception_4a_3x3 = face_recognition.utils.conv2d_bn(inception_3c,
                                        layer='inception_4a_3x3',
                                        cv1_out=96,
                                        cv1_filter=(1, 1),
@@ -124,7 +124,7 @@ def create_model():
                                        cv2_filter=(3, 3),
                                        cv2_strides=(1, 1),
                                        padding=(1, 1))
-    inception_4a_5x5 = nn.utils.conv2d_bn(inception_3c,
+    inception_4a_5x5 = face_recognition.utils.conv2d_bn(inception_3c,
                                        layer='inception_4a_5x5',
                                        cv1_out=32,
                                        cv1_filter=(1, 1),
@@ -134,19 +134,19 @@ def create_model():
                                        padding=(2, 2))
 
     inception_4a_pool = AveragePooling2D(pool_size=(3, 3), strides=(3, 3))(inception_3c)
-    inception_4a_pool = nn.utils.conv2d_bn(inception_4a_pool,
+    inception_4a_pool = face_recognition.utils.conv2d_bn(inception_4a_pool,
                                         layer='inception_4a_pool',
                                         cv1_out=128,
                                         cv1_filter=(1, 1),
                                         padding=(2, 2))
-    inception_4a_1x1 = nn.utils.conv2d_bn(inception_3c,
+    inception_4a_1x1 = face_recognition.utils.conv2d_bn(inception_3c,
                                        layer='inception_4a_1x1',
                                        cv1_out=256,
                                        cv1_filter=(1, 1))
     inception_4a = concatenate([inception_4a_3x3, inception_4a_5x5, inception_4a_pool, inception_4a_1x1], axis=3)
 
     #inception4e
-    inception_4e_3x3 = nn.utils.conv2d_bn(inception_4a,
+    inception_4e_3x3 = face_recognition.utils.conv2d_bn(inception_4a,
                                        layer='inception_4e_3x3',
                                        cv1_out=160,
                                        cv1_filter=(1, 1),
@@ -154,7 +154,7 @@ def create_model():
                                        cv2_filter=(3, 3),
                                        cv2_strides=(2, 2),
                                        padding=(1, 1))
-    inception_4e_5x5 = nn.utils.conv2d_bn(inception_4a,
+    inception_4e_5x5 = face_recognition.utils.conv2d_bn(inception_4a,
                                        layer='inception_4e_5x5',
                                        cv1_out=64,
                                        cv1_filter=(1, 1),
@@ -168,7 +168,7 @@ def create_model():
     inception_4e = concatenate([inception_4e_3x3, inception_4e_5x5, inception_4e_pool], axis=3)
 
     #inception5a
-    inception_5a_3x3 = nn.utils.conv2d_bn(inception_4e,
+    inception_5a_3x3 = face_recognition.utils.conv2d_bn(inception_4e,
                                        layer='inception_5a_3x3',
                                        cv1_out=96,
                                        cv1_filter=(1, 1),
@@ -178,12 +178,12 @@ def create_model():
                                        padding=(1, 1))
 
     inception_5a_pool = AveragePooling2D(pool_size=(3, 3), strides=(3, 3))(inception_4e)
-    inception_5a_pool = nn.utils.conv2d_bn(inception_5a_pool,
+    inception_5a_pool = face_recognition.utils.conv2d_bn(inception_5a_pool,
                                         layer='inception_5a_pool',
                                         cv1_out=96,
                                         cv1_filter=(1, 1),
                                         padding=(1, 1))
-    inception_5a_1x1 = nn.utils.conv2d_bn(inception_4e,
+    inception_5a_1x1 = face_recognition.utils.conv2d_bn(inception_4e,
                                        layer='inception_5a_1x1',
                                        cv1_out=256,
                                        cv1_filter=(1, 1))
@@ -191,7 +191,7 @@ def create_model():
     inception_5a = concatenate([inception_5a_3x3, inception_5a_pool, inception_5a_1x1], axis=3)
 
     #inception_5b
-    inception_5b_3x3 = nn.utils.conv2d_bn(inception_5a,
+    inception_5b_3x3 = face_recognition.utils.conv2d_bn(inception_5a,
                                        layer='inception_5b_3x3',
                                        cv1_out=96,
                                        cv1_filter=(1, 1),
@@ -200,13 +200,13 @@ def create_model():
                                        cv2_strides=(1, 1),
                                        padding=(1, 1))
     inception_5b_pool = MaxPooling2D(pool_size=3, strides=2)(inception_5a)
-    inception_5b_pool = nn.utils.conv2d_bn(inception_5b_pool,
+    inception_5b_pool = face_recognition.utils.conv2d_bn(inception_5b_pool,
                                         layer='inception_5b_pool',
                                         cv1_out=96,
                                         cv1_filter=(1, 1))
     inception_5b_pool = ZeroPadding2D(padding=(1, 1))(inception_5b_pool)
 
-    inception_5b_1x1 = nn.utils.conv2d_bn(inception_5a,
+    inception_5b_1x1 = face_recognition.utils.conv2d_bn(inception_5a,
                                        layer='inception_5b_1x1',
                                        cv1_out=256,
                                        cv1_filter=(1, 1))
@@ -219,7 +219,7 @@ def create_model():
 
     # Serialize model to JSON
     model_json = Model(inputs=[myInput], outputs=norm_layer).to_json()
-    with open("nn/bin/nn4.small2.v1.json", "w") as json_file:
+    with open("face_recognition/bin/nn4.small2.v1.json", "w") as json_file:
         json_file.write(model_json)
 
     return Model(inputs=[myInput], outputs=norm_layer)

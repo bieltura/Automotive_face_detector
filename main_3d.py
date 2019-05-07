@@ -1,9 +1,9 @@
 import cv2
 import glob
-from obj import devices
-from face_detector import CameraFaceDetector
+from devices import cameras
+from face_detector.detector import CameraFaceDetector
 import numpy as np
-from face_recognition import FacialRecognition
+from face_recognition.recognition import FacialRecognition
 from utils import demo
 
 # Demonstration values:
@@ -16,14 +16,15 @@ for camera in glob.glob("/dev/video?"):
     num_cameras += 1
 
 # Face size (square in px for CNN)
-face_size = 360
+face_size = 120
 face = None
 face_3d = None
+face_detected = False
+
 num_face = 270
 
 # Number of cameras in the system
-cameras = [None] * num_cameras
-face_detected = False
+cam = [None] * num_cameras
 
 # Currently one face_features for n cameras
 face_features = None
@@ -34,18 +35,18 @@ face_features = None
 
 # Setup the cameras
 for cam_id in range(num_cameras):
-    cameras[cam_id] = devices.FaceCamera(cam_id)
-    cameras[cam_id].start()
+    cam[cam_id] = cameras.FaceCamera(cam_id)
+    cam[cam_id].start()
 
-face_detector = CameraFaceDetector(cameras[cam_id].getScaleFactor(), face_size, stereo=True)
+face_detector = CameraFaceDetector(cam[cam_id].getScaleFactor(), face_size, stereo=True)
 face_detector.start()
 
 # Main program
 while True:
 
     # Get the frame from the camera
-    frame_right = cameras[0].getFrame()
-    frame_left = cameras[1].getFrame()
+    frame_right = cam[0].getFrame()
+    frame_left = cam[1].getFrame()
 
     if frame_right is not None and frame_left is not None:
 
@@ -65,9 +66,6 @@ while True:
                 face_detected = True
                 print("Face detected in camera " + str(cam_id))
 
-                # Get the not-aligned face with landmarks
-                #face_landmarks = face_detector.getLandmarksFace()
-
         else:
             # Once the face is detected, get the 3D model from the stereo
             if face_3d is None:
@@ -83,8 +81,8 @@ while True:
 
                 if face_landmarks is not None:
                     cv2.imshow("68 Landmarks", np.uint8(face_landmarks))
-                    cv2.imwrite("face.png", frame_left)
-                    cv2.imwrite("face_land.png", face_landmarks)
+                    #cv2.imwrite("face.png", frame_left)
+                    #cv2.imwrite("face_land.png", face_landmarks)
 
                 if face_3d is not None:
                     cv2.imshow("Face depth map", np.uint8(face_3d))
@@ -105,15 +103,15 @@ while True:
                 face_detected = False
                 face_detector.detect(None, None)
 
-        cv2.imshow("Right camera" + str(cam_id), cv2.resize(frame_right, tuple(int(x * cameras[0].getScaleFactor() * 3) for x in cameras[0].getDim())))
-        cv2.imshow("Left camera" + str(cam_id), cv2.resize(frame_left, tuple(int(x * cameras[0].getScaleFactor() * 3) for x in cameras[0].getDim())))
+        cv2.imshow("Right camera" + str(cam_id), cv2.resize(frame_right, tuple(int(x * cam[0].getScaleFactor() * 3) for x in cam[0].getDim())))
+        cv2.imshow("Left camera" + str(cam_id), cv2.resize(frame_left, tuple(int(x * cam[0].getScaleFactor() * 3) for x in cam[0].getDim())))
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         # Face detector thread stop
         face_detector.stop()
 
         # Camera thread stop
-        for camera in cameras:
+        for camera in cam:
             camera.close()
 
         cv2.destroyAllWindows()

@@ -1,5 +1,5 @@
-from utils import dlib_face_detecion as detector
-from stereo import stereo_vision as detector_3d
+from face_detector import dlib_face_detecion as detector
+from stereo_vision import stereo as detector_3d
 from threading import Thread
 from utils import demo
 
@@ -57,7 +57,7 @@ class CameraFaceDetector(Thread):
 
                             # Check if a face appears in the secundary frame (depth map will be optained with the main)
                             self.alignedFace, self.landmarks, self.bb = self.detector.detect_face(self.second_frame, self.face_size, face_scale_factor=self.scale_factor)
-                            self.landmarkFace = demo.landmarks_img(self.second_frame, self.landmarks, self.bb, self.face_size)
+                            self.landmarkFace = demo.landmarks_img(self.second_frame.copy(), self.landmarks, self.bb, self.face_size)
 
                             # A face has been detected, create the depth map
                             if self.alignedFace is not None:
