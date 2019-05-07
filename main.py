@@ -36,7 +36,7 @@ face_features = None
 
 # Neural Net Facial recognition start
 facial_recognition_thread = FacialRecognition()
-facial_recognition_thread.start()
+#facial_recognition_thread.start()
 
 # Setup the cameras
 for cam_id in range(num_cameras):

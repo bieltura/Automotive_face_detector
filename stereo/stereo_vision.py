@@ -83,7 +83,7 @@ wls_filter.setLambda(lmbda)
 wls_filter.setSigmaColor(sigma)
 
 
-def detect_3d_face(frameRight, frameLeft, ROI=None):
+def detect_3d_face(frameRight, frameLeft, map_size, ROI=None):
 
     if frameRight is not None and frameLeft is not None:
 
@@ -125,9 +125,15 @@ def detect_3d_face(frameRight, frameLeft, ROI=None):
             right = int(ROI.right() * calibration_size[0] / width_frame)
 
             # Get the face with ROI
-            filtered_face = filteredImg[top:bottom, left:right]
+            filtered_face = cv2.resize(gamma_correction(filteredImg[top:bottom, left:right], c=1, y=7), (map_size, map_size))
 
             return filtered_face, filteredImg
 
         else:
             return None, None
+
+
+def gamma_correction(img, c, y):
+    img = img + (255 - np.max(img))
+    gamma = 255 * c * ((img/255) ** y)
+    return gamma

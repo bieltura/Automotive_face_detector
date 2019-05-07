@@ -42,15 +42,15 @@ BIG_TEMPLATE = np.float32([
 # Template for 5 points to perform the affine transformation
 SMALL_TEMPLATE = BIG_TEMPLATE[[45, 42, 36, 39, 33]]
 
-predictor = dlib.shape_predictor('data/dlib/shape_predictor_5_face_landmarks.dat')
-landmarkIndices = [0, 2, 4]
-TEMPLATE = SMALL_TEMPLATE
+#predictor = dlib.shape_predictor('data/dlib/shape_predictor_5_face_landmarks.dat')
+#landmarkIndices = [0, 2, 4]
+#TEMPLATE = SMALL_TEMPLATE
 
-#predictor = dlib.shape_predictor('data/dlib/shape_predictor_68_face_landmarks.dat')
-#landmarkIndices = [36, 45, 33]
-#TEMPLATE = BIG_TEMPLATE
+predictor = dlib.shape_predictor('data/dlib/shape_predictor_68_face_landmarks.dat')
+landmarkIndices = [36, 45, 33]
+TEMPLATE = BIG_TEMPLATE
 
-# TODO normalization understanding
+# Normalization process
 tpl_min, tpl_max = np.min(BIG_TEMPLATE, axis=0), np.max(BIG_TEMPLATE, axis=0)
 TEMPLATE = (TEMPLATE - tpl_min) / (tpl_max - tpl_min)
 del BIG_TEMPLATE
@@ -65,7 +65,6 @@ def align(imgDim, rgbImg, bb=None):
 
     # Get the landmarks of the face
     landmarks = findLandmarks(rgbImg, bb)
-
     npLandmarks = np.float32(landmarks)
     npLandmarkIndices = np.array(landmarkIndices)
 

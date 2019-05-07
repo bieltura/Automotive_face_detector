@@ -52,9 +52,10 @@ class Camera(Thread):
 
 class FaceCamera(Camera):
 
-    def __init__(self, cam_id, min_face_size=40, max_face_dist=800):
+    def __init__(self, cam_id, min_face_size=40, max_face_dist=1000):
         super().__init__(cam_id)
         self.face = None
+        self.bb = None
         self.landmarks = None
 
         # Compute scale factor for different focal length: Average human face height is 55cm
@@ -64,5 +65,21 @@ class FaceCamera(Camera):
         print("\tMax distance to be recognized: {0:.2f} m".format(max_face_dist/1000))
         print("\tScale factor for analysis: 1/{0:.2f}".format(1/self.scale_factor))
 
+    def setDetectedFace(self, face, landmarks, bb):
+        self.face = face
+        self.landmarks = landmarks
+        self.bb = bb
+
     def getScaleFactor(self):
         return self.scale_factor
+
+    def getDetectedFace(self):
+        return self.face
+
+    def getDetectedLandmarks(self):
+        if self.face is not None:
+            return self.landmarks
+
+    def getDetectedBB(self):
+        if self.face is not None:
+            return self.face
