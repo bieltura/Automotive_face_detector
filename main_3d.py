@@ -16,7 +16,7 @@ for camera in glob.glob("/dev/video?"):
     num_cameras += 1
 
 # Face size (square in px for CNN)
-face_size = 120
+face_size = 240
 face = None
 face_3d = None
 face_detected = False
@@ -58,7 +58,7 @@ while True:
             # If there is no face, get the face from the detector
             if face is None:
 
-                # Get the aligned FACE
+                # Get the aligned face and landmark face
                 face, face_landmarks = face_detector.getFace()
 
             # Face has been detected
@@ -103,8 +103,8 @@ while True:
                 face_detected = False
                 face_detector.detect(None, None)
 
-        cv2.imshow("Right camera" + str(cam_id), cv2.resize(frame_right, tuple(int(x * cam[0].getScaleFactor() * 3) for x in cam[0].getDim())))
-        cv2.imshow("Left camera" + str(cam_id), cv2.resize(frame_left, tuple(int(x * cam[0].getScaleFactor() * 3) for x in cam[0].getDim())))
+        cv2.imshow("Right camera" + str(cam_id), cv2.resize(frame_right, tuple(int(x * cam[0].getScaleFactor() * 2) for x in cam[0].getDim())))
+        cv2.imshow("Left camera" + str(cam_id), cv2.resize(frame_left, tuple(int(x * cam[0].getScaleFactor() * 2) for x in cam[0].getDim())))
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         # Face detector thread stop

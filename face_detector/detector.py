@@ -16,22 +16,18 @@ class CameraFaceDetector(Thread):
         self.frame = None
 
         # Every face camera has a detector attribute
-        self.detector = detector
         self.alignedFace = None
         self.landmarkFace = None
 
         # Stereo properties
         if self.stereo:
             self.second_frame = None
-            self.detector_3d = detector_3d
             self.face_3d = None
             self.scene_3d = None
 
         # Face attributes
         self.landmarks = None
         self.bb = None
-
-        self.landmarksFrame = None
 
         # Variable to stop the camera thread if needed
         self.stopThread = False
@@ -45,28 +41,35 @@ class CameraFaceDetector(Thread):
                 # If there is no frame, no face detected
                 if self.frame is None:
                     self.alignedFace = None
+                    self.landmarkFace = None
                     if self.stereo:
                         self.face_3d = None
                         self.scene_3d = None
                 else:
+                    # Make a copy of this frame to analyze
+                    frame = self.frame.copy()
 
                     # 3D recognition:
                     if self.stereo:
 
                         if self.second_frame is not None:
+                            # Make a copy of the second frame to analyze
+                            second_frame = self.second_frame.copy()
 
                             # Check if a face appears in the secundary frame (depth map will be optained with the main)
-                            self.alignedFace, self.landmarks, self.bb = self.detector.detect_face(self.second_frame, self.face_size, face_scale_factor=self.scale_factor)
-                            self.landmarkFace = demo.landmarks_img(self.second_frame.copy(), self.landmarks, self.bb, self.face_size)
+                            self.alignedFace, self.landmarks, self.bb = detector.detect_face(second_frame.copy(), self.face_size, face_scale_factor=self.scale_factor)
 
                             # A face has been detected, create the depth map
                             if self.alignedFace is not None:
-                                self.face_3d, self.scene_3d = detector_3d.detect_3d_face(self.frame, self.second_frame, self.face_size, ROI=self.bb)
+                                self.landmarkFace = demo.landmarks_img(second_frame.copy(), self.landmarks, self.bb, self.face_size)
+                                self.face_3d, self.scene_3d = detector_3d.detect_3d_face(frame.copy(), second_frame.copy(), self.face_size, ROI=self.bb)
 
                     # 2D recognition
                     else:
-                        self.alignedFace, self.landmarks, self.bb = self.detector.detect_face(self.frame, self.face_size, face_scale_factor=self.scale_factor)
-                        self.landmarkFace = demo.landmarks_img(self.frame, self.landmarks, self.bb, self.face_size)
+                        self.alignedFace, self.landmarks, self.bb = detector.detect_face(frame.copy(), self.face_size, face_scale_factor=self.scale_factor)
+
+                        if self.alignedFace is not None:
+                            self.landmarkFace = demo.landmarks_img(frame.copy(), self.landmarks, self.bb, self.face_size)
 
             # End the thread and close the camera
             elif self.stopThread:
