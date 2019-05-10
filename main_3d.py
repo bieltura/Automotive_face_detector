@@ -1,19 +1,12 @@
 import cv2
-import glob
 from devices import cameras
 from face_detector.detector import CameraFaceDetector
 import numpy as np
 from face_recognition.recognition import FacialRecognition
-from utils import demo
 
-# Demonstration values:
-face_detector_demo = False
-face_recognition_demo = False
-
-# Check number of cameras in Linux distribution cameras
-num_cameras = 0
-for camera in glob.glob("/dev/video?"):
-    num_cameras += 1
+# 2 cameras for the stereo system
+num_cameras = 2
+cam = [None] * num_cameras
 
 # Face size (square in px for CNN)
 face_size = 240
@@ -22,12 +15,6 @@ face_3d = None
 face_detected = False
 
 num_face = 270
-
-# Number of cameras in the system
-cam = [None] * num_cameras
-
-# Currently one face_features for n cameras
-face_features = None
 
 # Neural Net Facial recognition start
 #facial_recognition_thread = FacialRecognition()
@@ -38,6 +25,7 @@ for cam_id in range(num_cameras):
     cam[cam_id] = cameras.FaceCamera(cam_id)
     cam[cam_id].start()
 
+# Any of the two cameras for the scalefactor
 face_detector = CameraFaceDetector(cam[cam_id].getScaleFactor(), face_size, stereo=True)
 face_detector.start()
 
