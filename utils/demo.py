@@ -19,13 +19,20 @@ def landmarks_img(frame, landmarks, bb, face_size):
 
                  #   cv2.circle(frame, (x, y), 5, (255, 0, 255), -1)
                 #else:
-                cv2.circle(frame, (x, y), 5, (192, 162, 103), -1)
+                if y < frame.shape[0] and x < frame.shape[1]:
+                    cv2.circle(frame, (x, y), 5, (192, 162, 103), -1)
 
         if bb is not None:
-            frame = frame[bb.top() - 10:bb.bottom() + 30, bb.left() - 10:bb.right() + 10]
-            frame = cv2.resize(np.uint8(frame), (face_size, face_size))
+            frame_face = frame[bb.top():bb.bottom(), bb.left():bb.right()].copy()
 
-    return frame
+            # The borders
+            if not any(dim is 0 for dim in frame_face.shape):
+                frame_face = cv2.resize(np.uint8(frame_face), (face_size, face_size))
+
+            else:
+                frame_face = np.zeros((face_size,face_size,3), np.uint8)
+
+    return frame_face
 
 
 def compute_fps(num_frames, start):

@@ -125,15 +125,23 @@ def detect_3d_face(frameRight, frameLeft, map_size, ROI=None):
             right = int(ROI.right() * calibration_size[0] / width_frame)
 
             # Get the face with ROI
-            filtered_face = cv2.resize(gamma_correction(filteredImg[top:bottom, left:right], c=1, y=7), (map_size, map_size))
+            filtered_face = gamma_correction(filteredImg[top:bottom, left:right], c=1, y=7)
+
+            # If the ROI is outside the legal borders, return black depth map
+            if filtered_face is not None:
+                filtered_face = cv2.resize(filtered_face, (map_size, map_size))
+            else:
+                filtered_face = np.zeros((map_size,map_size), np.uint8)
 
             return filtered_face, filteredImg
 
-        else:
-            return None, None
+        return None, None
 
 
 def gamma_correction(img, c, y):
-    img = img + (255 - np.max(img))
-    gamma = 255 * c * ((img/255) ** y)
-    return gamma
+    if not any(dim is 0 for dim in img.shape):
+        img = img + (255 - np.max(img))
+        gamma = 255 * c * ((img/255) ** y)
+        return gamma
+
+    return None

@@ -37,7 +37,7 @@ face_features = None
 
 # Neural Net Facial recognition start
 facial_recognition_thread = FacialRecognition()
-#facial_recognition_thread.start()
+facial_recognition_thread.start()
 
 # Setup the cameras
 for cam_id in range(num_cameras):
@@ -79,11 +79,11 @@ while True:
 
                     # Pause the face detector thread by setting a None frame
                     face_detector[cam_id].detect(None)
-                    #face_detected[cam_id] = True
+                    face_detected[cam_id] = True
                     cv2.imshow("Face " + str(cam_id), face)
 
                     # Call the facial recognition thread with the face
-                    #facial_recognition_thread.recognize_face(face)
+                    facial_recognition_thread.recognize_face(face)
 
                     # Face Landmarks demo
                     if face_detector_demo:

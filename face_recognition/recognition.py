@@ -1,33 +1,47 @@
-from threading import Thread, Lock
-from face_recognition import model
+from threading import Thread
+from face_recognition.faceNet import model
+from face_recognition.depth import model_3d
 import numpy as np
 from database import db_service as db
 import tensorflow as tf
-from tensorflow import keras
+
+# Patch, retrain NN
+import cv2
+
 
 class FacialRecognition(Thread):
-    def __init__(self):
+    def __init__(self, stereo=False):
         Thread.__init__(self)
 
         self.face = None
-        self.face_features = None
+        self.depth_face = None
         self.match = None
 
         self.nn4_small2_pretrained = None
+        self.nn_binary_depth_map = None
 
-        # Load the model
-        # Load json and create model
-        #json_file = open("nn/bin/nn4.small2.v1.json", 'r')
-        #loaded_model_json = json_file.read()
-        #json_file.close()
-        #self.nn4_small2_pretrained = keras.models.model_from_json(loaded_model_json)
+        # Create the session
+        self.thread_session = tf.Session()
 
-        print("Loading the facial recognition model ...")
-        self.nn4_small2_pretrained = model.create_model()
-        self.nn4_small2_pretrained.load_weights('face_recognition/bin/nn4.small2.v1.h5')
+        # Create the model
+        print("Loading the faceNet recognition model ...")
+        self.nn4_small2_pretrained = model.create_model('face_recognition/faceNet/bin/nn4.small2.v1.h5', (96, 96, 3))
 
         # Tell the model is loaded in a different thread
-        self.nn4_small2_pretrained._make_predict_function()
+        #self.nn4_small2_pretrained._make_predict_function()
+
+        # FaceNet graph
+        self.facenet_graph = tf.get_default_graph()
+
+        if stereo:
+            print("Loading the Depth detection model ...")
+            self.nn_depth = model_3d.create_model('face_recognition/depth/binary_depth_classification.h5', (240,240,1))
+            #self.nn_depth._make_predict_function()
+
+            self.depth_graph = tf.get_default_graph()
+        else:
+            self.nn_depth = None
+
         print("Model loaded")
 
         # Variable to stop the camera thread if needed
@@ -39,40 +53,67 @@ class FacialRecognition(Thread):
 
             if not self.stopThread:
 
-                # Lock the thread
+                # Remove the face detected and make a copy to pass to the NN
                 if self.face is not None:
-
-                    # scale RGB values to interval [0,1]
                     face = (self.face / 255.).astype(np.float32)
-
-                    # Reset the values, make sure we lock the enter for more faces
                     self.face = None
 
-                    self.nn4_small2_pretrained.load_weights('face_recognition/bin/nn4.small2.v1.h5')
+                    # Remove the depth mapp and make a copy to pass to the NN
+                    if self.depth_face is not None:
+                        depth_face = (self.depth_face / 255.).astype(np.float32)
+                        self.depth_face = None
 
-                    # Forward pass NN
-                    self.face_features = self.nn4_small2_pretrained.predict(np.expand_dims(face, axis=0))[0]
+                    # With the tensorflow session (new keras)
+                    with self.thread_session.as_default():
 
-                    if self.face_features is not None:
+                        depth_info = 0
 
-                        # Get all persons from database
-                        persons = db.get_all_persons()
-                        threshold = 0.56
-                        self.match = "unknown"
+                        # If there is a depth neural net
+                        if self.nn_depth is not None:
 
-                        # Compare the distance with each person from DB
-                        for i, person in enumerate(persons):
-                            distance = np.sum(
-                                np.square(self.face_features - np.fromstring(person.face_features, np.float32)))
-                            if distance < threshold:
-                                self.match = person.name
-                                break
+                            # With the depth model as the default graph:
+                            with self.depth_graph.as_default():
+
+                                # Keras bug_ reload the weights for every iteration of the thread
+                                self.nn_depth.load_weights('face_recognition/depth/binary_depth_classification.h5')
+
+                                depth_info = self.nn_depth.predict(np.expand_dims(np.expand_dims(depth_face, axis=0),axis=3))[0]
+
+                        # If the detected depth map is a face or is 2D scanning
+                        if depth_info > 0.5 or self.nn_depth is None:
+
+                            with self.facenet_graph.as_default():
+
+                                # Keras bug: reload the weights for every iteration of the thread
+                                self.nn4_small2_pretrained.load_weights('face_recognition/faceNet/bin/nn4.small2.v1.h5')
+
+                                face = cv2.resize(face, (96,96))
+
+                                face_features = self.nn4_small2_pretrained.predict(np.expand_dims(face, axis=0))[0]
+
+                            if face_features is not None:
+
+                                # Get all persons from database
+                                persons = db.get_all_persons()
+                                self.match = "unknown"
+
+                                # Compare the distance with each person from DB
+                                for i, person in enumerate(persons):
+                                    distance = np.sum(
+                                        np.square(face_features - np.fromstring(person.face_features, np.float32)))
+                                    if distance < 0.56:
+                                        self.match = person.name
+                                        break
+
+                        else:
+                            self.match = "3D scan is not a face ({0}%)".format(int(depth_info*100))
 
             else:
                 return
 
-    def recognize_face(self, face):
+    def recognize_face(self, face, depth_face=None):
         self.face = face
+        self.depth_face = depth_face
 
     # State variable for stopping face detector service
     def stop(self):
@@ -80,5 +121,5 @@ class FacialRecognition(Thread):
 
     def get_match(self):
         match = self.match
-        self.match = None
+        #self.match = None
         return match
