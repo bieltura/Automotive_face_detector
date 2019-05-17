@@ -80,7 +80,7 @@ class FacialRecognition(Thread):
                                 depth_info = self.nn_depth.predict(np.expand_dims(np.expand_dims(depth_face, axis=0),axis=3))[0]
 
                         # If the detected depth map is a face or is 2D scanning
-                        if depth_info > 0.2 or self.nn_depth is None:
+                        if depth_info > 0.01 or self.nn_depth is None:
 
                             with self.facenet_graph.as_default():
 
@@ -104,9 +104,6 @@ class FacialRecognition(Thread):
                                     if distance < 0.56:
                                         self.match = person.name
                                         break
-
-                        else:
-                            self.match = "3D scan is a face ({0}% yes)".format(int(depth_info*100))
             else:
                 return
 

@@ -24,10 +24,11 @@ recognizer = Recognizer(cam=cam[0], stereo=stereo)
 detected_face_landmarks = None
 detected_face = None
 detected_map = None
+match = None
 
 # Method that draws the output
 def draw(stereo, results, frame_right, frame_left):
-    global detected_face_landmarks, detected_face, detected_map
+    global detected_face_landmarks, detected_face, detected_map, match
     x_margin = 24
     y_margin = 70
 
@@ -63,6 +64,14 @@ def draw(stereo, results, frame_right, frame_left):
         if detected_map is not None:
             ui[2 * y_margin + frame_height:2 * y_margin + frame_height + square_images, 3 * x_margin + 2 * square_images:3 * x_margin + 3 * square_images] = cv2.resize(detected_map, (square_images, square_images))
 
+    if results[2] is not None:
+        match = results[2]
+
+    if match is not None:
+        if match is "unknown":
+            match = "I can't recognize you"
+        cv2.putText(ui, match, (3*square_images + 3*x_margin + 20, 424 + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (0,0,0))
+
     return ui
 
 
@@ -79,7 +88,7 @@ while True:
     if frame_right is not None:
         results = recognizer.recognize(stereo, frame_right, frame_left)
         ui = draw(stereo, results, frame_right, frame_left)
-        cv2.imshow("3D Facial recognition", ui)
+        cv2.imshow('3D Facial recognition', ui)
 
     # Closing the app
     if cv2.waitKey(1) & 0xFF == ord('q'):
