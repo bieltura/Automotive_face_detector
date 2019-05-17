@@ -31,6 +31,9 @@ for cam_id in range(num_cameras):
 face_detector = CameraFaceDetector(cam[cam_id].getScaleFactor(), face_size, stereo=True)
 face_detector.start()
 
+detected_face_landmarks = None
+detected_face = None
+detected_map = None
 
 # Main program
 while True:
@@ -78,19 +81,21 @@ while True:
             #num_face = num_face + 1
             match = facial_recognition_thread.get_match()
 
-            print(match)
+            if match is not None:
+                print(match)
 
             if face is not None:
                 cv2.imshow("Aligned face", np.uint8(face))
 
             if face_landmarks is not None:
                 cv2.imshow("68 Landmarks", np.uint8(face_landmarks))
-                #cv2.imwrite("face.png", frame_left)
+                #cv2.imwrite("face.png", face)
                 #cv2.imwrite("face_land.png", face_landmarks)
+                #cv2.imwrite("full.png", frame_left)
 
             if face_3d is not None:
                 cv2.imshow("Face depth map", np.uint8(face_3d))
-                cv2.imshow("Scene depth map", np.uint8(scene))
+                #cv2.imshow("Scene depth map", np.uint8(scene))
                 #cv2.imshow("3D Scene " + str(cam_id), np.uint8(scene))
 
             # Save the values

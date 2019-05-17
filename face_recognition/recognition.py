@@ -1,6 +1,6 @@
 from threading import Thread
-from face_recognition.faceNet import model
-from face_recognition.depth import model_3d
+from face_recognition.faceNet import model as facenet_model
+from face_recognition.depth import model as depth_model
 import numpy as np
 from database import db_service as db
 import tensorflow as tf
@@ -24,19 +24,19 @@ class FacialRecognition(Thread):
         self.thread_session = tf.Session()
 
         # Create the model
-        print("Loading the faceNet recognition model ...")
-        self.nn4_small2_pretrained = model.create_model('face_recognition/faceNet/bin/nn4.small2.v1.h5', (96, 96, 3))
+        print("Loading the FaceNet recognition model ...")
+        self.nn4_small2_pretrained = facenet_model.create_model('face_recognition/faceNet/bin/nn4.small2.v1.h5', (96, 96, 3))
 
         # Tell the model is loaded in a different thread
-        #self.nn4_small2_pretrained._make_predict_function()
+        self.nn4_small2_pretrained._make_predict_function()
 
         # FaceNet graph
         self.facenet_graph = tf.get_default_graph()
 
         if stereo:
             print("Loading the Depth detection model ...")
-            self.nn_depth = model_3d.create_model('face_recognition/depth/binary_depth_classification.h5', (240,240,1))
-            #self.nn_depth._make_predict_function()
+            self.nn_depth = depth_model.create_model('face_recognition/depth/bin/binary_depth_classification.h5', (240, 240, 1))
+            self.nn_depth._make_predict_function()
 
             self.depth_graph = tf.get_default_graph()
         else:
@@ -75,12 +75,12 @@ class FacialRecognition(Thread):
                             with self.depth_graph.as_default():
 
                                 # Keras bug_ reload the weights for every iteration of the thread
-                                self.nn_depth.load_weights('face_recognition/depth/binary_depth_classification.h5')
+                                self.nn_depth.load_weights('face_recognition/depth/bin/binary_depth_classification.h5')
 
                                 depth_info = self.nn_depth.predict(np.expand_dims(np.expand_dims(depth_face, axis=0),axis=3))[0]
 
                         # If the detected depth map is a face or is 2D scanning
-                        if depth_info > 0.5 or self.nn_depth is None:
+                        if depth_info > 0.2 or self.nn_depth is None:
 
                             with self.facenet_graph.as_default():
 
@@ -106,8 +106,7 @@ class FacialRecognition(Thread):
                                         break
 
                         else:
-                            self.match = "3D scan is not a face ({0}%)".format(int(depth_info*100))
-
+                            self.match = "3D scan is a face ({0}% yes)".format(int(depth_info*100))
             else:
                 return
 
@@ -121,5 +120,5 @@ class FacialRecognition(Thread):
 
     def get_match(self):
         match = self.match
-        #self.match = None
+        self.match = None
         return match
