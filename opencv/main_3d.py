@@ -31,10 +31,6 @@ for cam_id in range(num_cameras):
 face_detector = CameraFaceDetector(cam[cam_id].getScaleFactor(), face_size, stereo=True)
 face_detector.start()
 
-detected_face_landmarks = None
-detected_face = None
-detected_map = None
-
 # Main program
 while True:
 
