@@ -6,7 +6,11 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D
 from tensorflow.keras.layers import Activation, Dropout, Flatten, Dense
 
-def create_model(weights_path, input_shape):
+def create_model(weights_path):
+
+    # Depth map image
+    input_shape = (96, 96, 1)
+
     # Build the model
     model = Sequential()
     model.add(Conv2D(32, (3, 3), input_shape=input_shape))
@@ -30,7 +34,5 @@ def create_model(weights_path, input_shape):
 
     # Load the weights
     model.load_weights(weights_path)
-    #with open("face_recognition/bin/nn4.small2.v1.json", "w") as json_file:
-    #    json_file.write(model_json)
 
     return model

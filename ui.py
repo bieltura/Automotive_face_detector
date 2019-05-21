@@ -72,7 +72,7 @@ def draw(stereo, results, frame_right, frame_left):
         ui[y:y+size, x:x+size] = action
 
         if stereo:
-            cv2.putText(ui, match, (x - 60 , y - 30), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (0,0,0))
+            cv2.putText(ui, match, (x - 60, y - 30), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (0, 0, 0))
         else:
             cv2.putText(ui, match, (x + 2*size, y+20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 0))
 
@@ -124,6 +124,8 @@ def run(stereo):
 
             # Recognizer thread
             recognizer.close(stereo)
+
+            results = None
 
             cv2.destroyAllWindows()
             break

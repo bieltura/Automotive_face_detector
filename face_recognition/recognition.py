@@ -5,17 +5,12 @@ import numpy as np
 from database import db_service as db
 import tensorflow as tf
 
-# Patch, retrain NN
-import cv2
-
-
 class FacialRecognition(Thread):
     def __init__(self, stereo=False):
         Thread.__init__(self)
 
         self.face = None
         self.depth_face = None
-        self.match = None
         self.face_features = None
 
         self.nn4_small2_pretrained = None
@@ -26,7 +21,7 @@ class FacialRecognition(Thread):
 
         # Create the model
         print("Loading the FaceNet recognition model ...")
-        self.nn4_small2_pretrained = facenet_model.create_model('face_recognition/faceNet/bin/nn4.small2.v1.h5', (96, 96, 3))
+        self.nn4_small2_pretrained = facenet_model.create_model('face_recognition/faceNet/bin/nn4.small2.v1.h5')
 
         # Tell the model is loaded in a different thread
         self.nn4_small2_pretrained._make_predict_function()
@@ -36,7 +31,7 @@ class FacialRecognition(Thread):
 
         if stereo:
             print("Loading the Depth detection model ...")
-            self.nn_depth = depth_model.create_model('face_recognition/depth/bin/binary_depth_classification.h5', (240, 240, 1))
+            self.nn_depth = depth_model.create_model('face_recognition/depth/bin/binary_depth_classification.h5')
             self.nn_depth._make_predict_function()
 
             self.depth_graph = tf.get_default_graph()
@@ -80,6 +75,8 @@ class FacialRecognition(Thread):
 
                                 depth_info = self.nn_depth.predict(np.expand_dims(np.expand_dims(depth_face, axis=0),axis=3))[0]
 
+                                print(depth_info)
+
                         # If the detected depth map is a face or is 2D scanning
                         if depth_info > 0.01 or self.nn_depth is None:
 
@@ -87,8 +84,6 @@ class FacialRecognition(Thread):
 
                                 # Keras bug: reload the weights for every iteration of the thread
                                 self.nn4_small2_pretrained.load_weights('face_recognition/faceNet/bin/nn4.small2.v1.h5')
-
-                                face = cv2.resize(face, (96,96))
 
                                 self.face_features = self.nn4_small2_pretrained.predict(np.expand_dims(face, axis=0))[0]
 
@@ -107,20 +102,19 @@ class FacialRecognition(Thread):
         self.stopThread = True
 
     def get_match(self):
+        match = None
         if self.face_features is not None:
 
             # Get all persons from database
             persons = db.get_all_persons()
-            self.match = "unknown"
+            match = "unknown"
 
             # Compare the distance with each person from DB
             for i, person in enumerate(persons):
                 distance = np.sum(
                     np.square(self.face_features - np.fromstring(person.face_features, np.float32)))
                 if distance < 0.56:
-                    self.match = person.name
+                    match = person.name
                     break
 
-        match = self.match
-        self.match = None
         return match

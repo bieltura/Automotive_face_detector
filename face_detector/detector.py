@@ -59,7 +59,7 @@ class CameraFaceDetector(Thread):
                             # Check if a face appears in the secundary frame (depth map will be optained with the main)
                             self.alignedFace, self.landmarks, self.bb = detector.detect_face(second_frame.copy(), self.face_size, face_scale_factor=self.scale_factor)
 
-                            # A face has been detected, create the depth map
+                            # A face has been detected, create the depth map and landmarks
                             if self.alignedFace is not None:
                                 self.landmarkFace = demo.landmarks_img(second_frame.copy(), self.landmarks, self.bb, self.face_size)
                                 self.face_3d, self.scene_3d = detector_3d.detect_3d_face(frame.copy(), second_frame.copy(), self.face_size, ROI=self.bb)

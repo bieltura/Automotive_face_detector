@@ -6,7 +6,7 @@ class Recognizer:
     def __init__(self, cam, stereo):
 
         # Face size (square in px for CNN)
-        self.face_size = 240
+        self.face_size = 96
         self.face = None
         self.face_landmarks = None
 

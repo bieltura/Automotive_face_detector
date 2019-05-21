@@ -42,7 +42,7 @@ BIG_TEMPLATE = np.float32([
 # Template for 5 points to perform the affine transformation
 SMALL_TEMPLATE = BIG_TEMPLATE[[45, 42, 36, 39, 33]]
 
-#predictor = dlib.shape_predictor('data/dlib/shape_predictor_5_face_landmarks.dat')
+#predictor = dlib.shape_predictor('face_detector/data/dlib/shape_predictor_5_face_landmarks.dat')
 #landmarkIndices = [0, 2, 4]
 #TEMPLATE = SMALL_TEMPLATE
 

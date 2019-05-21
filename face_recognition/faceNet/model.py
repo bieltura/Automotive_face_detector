@@ -1,9 +1,3 @@
-# -----------------------------------------------------------------------------------------
-# Code taken from https://github.com/iwantooxxoox/Keras-OpenFace (with minor modifications)
-# -----------------------------------------------------------------------------------------
-
-import tensorflow as tf
-
 from tensorflow.keras.layers import Conv2D, ZeroPadding2D, Activation, Input, concatenate
 from tensorflow.keras.layers import Lambda, Flatten, Dense
 from tensorflow.keras.layers import BatchNormalization
@@ -14,10 +8,14 @@ from tensorflow.keras import backend as K
 import face_recognition.faceNet.utils
 from face_recognition.faceNet.utils import LRN2D
 
-def create_model(weights_path, input_shape):
-    myInput = Input(shape=(96, 96, 3))
 
-    x = ZeroPadding2D(padding=(3, 3), input_shape=(96, 96, 3))(myInput)
+def create_model(weights_path):
+
+    # RGB Image to be recognized
+    input_shape = (96, 96, 3)
+    myInput = Input(shape=input_shape)
+
+    x = ZeroPadding2D(padding=(3, 3), input_shape=input_shape)(myInput)
     x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1')(x)
     x = BatchNormalization(axis=3, epsilon=0.00001, name='bn1')(x)
     x = Activation('relu')(x)
@@ -221,10 +219,5 @@ def create_model(weights_path, input_shape):
 
     model = Model(inputs=[myInput], outputs=norm_layer)
     model.load_weights(weights_path)
-
-    # Serialize model to JSON
-    model_json = Model(inputs=[myInput], outputs=norm_layer).to_json()
-    with open("face_recognition/faceNet/bin/nn4.small2.v1.json", "w") as json_file:
-        json_file.write(model_json)
 
     return model
