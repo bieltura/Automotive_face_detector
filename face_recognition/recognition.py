@@ -16,6 +16,7 @@ class FacialRecognition(Thread):
         self.face = None
         self.depth_face = None
         self.match = None
+        self.face_features = None
 
         self.nn4_small2_pretrained = None
         self.nn_binary_depth_map = None
@@ -89,21 +90,8 @@ class FacialRecognition(Thread):
 
                                 face = cv2.resize(face, (96,96))
 
-                                face_features = self.nn4_small2_pretrained.predict(np.expand_dims(face, axis=0))[0]
+                                self.face_features = self.nn4_small2_pretrained.predict(np.expand_dims(face, axis=0))[0]
 
-                            if face_features is not None:
-
-                                # Get all persons from database
-                                persons = db.get_all_persons()
-                                self.match = "unknown"
-
-                                # Compare the distance with each person from DB
-                                for i, person in enumerate(persons):
-                                    distance = np.sum(
-                                        np.square(face_features - np.fromstring(person.face_features, np.float32)))
-                                    if distance < 0.56:
-                                        self.match = person.name
-                                        break
             else:
                 return
 
@@ -111,11 +99,28 @@ class FacialRecognition(Thread):
         self.face = face
         self.depth_face = depth_face
 
+    def get_face_features(self):
+        return self.face_features
+
     # State variable for stopping face detector service
     def stop(self):
         self.stopThread = True
 
     def get_match(self):
+        if self.face_features is not None:
+
+            # Get all persons from database
+            persons = db.get_all_persons()
+            self.match = "unknown"
+
+            # Compare the distance with each person from DB
+            for i, person in enumerate(persons):
+                distance = np.sum(
+                    np.square(self.face_features - np.fromstring(person.face_features, np.float32)))
+                if distance < 0.56:
+                    self.match = person.name
+                    break
+
         match = self.match
         self.match = None
         return match

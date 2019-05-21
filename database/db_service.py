@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-import numpy as np
 
 # Database setup and metadata
 Base = declarative_base()
@@ -12,6 +11,7 @@ Base.metadata.bind = engine
 DBSession = sessionmaker()
 DBSession.bind = engine
 session = DBSession()
+
 
 class Person(Base):
     __tablename__ = 'Person'
@@ -30,7 +30,6 @@ def create_database():
 def add_person(name, picture_path, face_features):
 
     # Compute the face features of a picture
-
     new_person = Person(name=name, face_img_path=picture_path, face_features=face_features.tostring())
     session.add(new_person)
     session.commit()

@@ -3,3 +3,4 @@ opencv-python
 SQLAlchemy
 tensorflow
 dlib
+PIL

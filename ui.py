@@ -3,28 +3,13 @@ from devices import cameras
 from main import Recognizer
 import numpy as np
 
-stereo = True
-
-if stereo:
-    num_cameras = 2
-    wallpaper = cv2.imread("img/ui_3d.png")
-else:
-    num_cameras = 1
-    wallpaper = cv2.imread("img/ui_2d.png")
-
-cam = [None] * num_cameras
-
-# Setup the cameras
-for cam_id in range(num_cameras):
-    cam[cam_id] = cameras.FaceCamera(cam_id)
-    cam[cam_id].start()
-
-recognizer = Recognizer(cam=cam[0], stereo=stereo)
-
 detected_face_landmarks = None
 detected_face = None
 detected_map = None
 match = None
+
+wallpaper = None
+
 
 # Method that draws the output
 def draw(stereo, results, frame_right, frame_left):
@@ -68,37 +53,77 @@ def draw(stereo, results, frame_right, frame_left):
         match = results[2]
 
     if match is not None:
+
+        if stereo:
+            x = 3*square_images + 3*x_margin + 100
+            y = 3*y_margin + frame_height + 50
+            size = 60
+        else:
+            x = int(frame_width / 2)
+            y= frame_height + 2*y_margin + square_images + 20
+            size = 30
+
         if match is "unknown":
-            match = "I can't recognize you"
-        cv2.putText(ui, match, (3*square_images + 3*x_margin + 20, 424 + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (0,0,0))
+            action = cv2.resize(cv2.imread("img/lock.jpg"), (size, size))
+            match = "Identity not recognized"
+        else:
+            action = cv2.resize(cv2.imread("img/unlock.jpg"), (size, size))
+
+        ui[y:y+size, x:x+size] = action
+
+        if stereo:
+            cv2.putText(ui, match, (x - 60 , y - 30), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (0,0,0))
+        else:
+            cv2.putText(ui, match, (x + 2*size, y+20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 0))
 
     return ui
 
 
-# Main method
-while True:
-    frame_right = cam[0].getFrame()
-
+def run(stereo):
+    global wallpaper
     if stereo:
-        frame_left = cam[1].getFrame()
+        num_cameras = 2
+        wallpaper = cv2.imread("img/ui_3d.png")
     else:
-        frame_left = None
+        num_cameras = 1
+        wallpaper = cv2.imread("img/ui_2d.png")
 
-    # Check if the frame right is captures
-    if frame_right is not None:
-        results = recognizer.recognize(stereo, frame_right, frame_left)
-        ui = draw(stereo, results, frame_right, frame_left)
-        cv2.imshow('3D Facial recognition', ui)
+    cam = [None] * num_cameras
 
-    # Closing the app
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    # Setup the cameras
+    for cam_id in range(num_cameras):
+        cam[cam_id] = cameras.FaceCamera(cam_id)
+        cam[cam_id].start()
 
-        # Camera thread stop
-        for camera in cam:
-            camera.close()
+    recognizer = Recognizer(cam=cam[0], stereo=stereo)
 
-        # Recognizer thread
-        recognizer.close()
 
-        cv2.destroyAllWindows()
-        break
+    # Main method
+    while True:
+        frame_right = cam[0].getFrame()
+
+        if stereo:
+            title  = "3D Face recognition"
+            frame_left = cam[1].getFrame()
+        else:
+            title = "2D Face recognition"
+            frame_left = None
+
+        # Check if the frame right is captures
+        if frame_right is not None:
+            results = recognizer.recognize(stereo, frame_right, frame_left)
+            ui = draw(stereo, results, frame_right, frame_left)
+            cv2.imshow(title, ui)
+
+        # Closing the app
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+
+            # Camera thread stop
+            for camera in cam:
+                camera.close()
+
+            # Recognizer thread
+            recognizer.close(stereo)
+
+            cv2.destroyAllWindows()
+            break

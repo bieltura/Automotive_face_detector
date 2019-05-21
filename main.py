@@ -87,7 +87,17 @@ class Recognizer:
             else:
                 return self.face_landmarks, self.face, self.match
 
-    def close(self):
+    def close(self, stereo):
         # Face detector thread stop
         self.face_detector.stop()
         self.facial_recognition_thread.stop()
+
+        self.face = None
+        self.face_landmarks = None
+
+        self.face_detected = False
+        self.match = None
+
+        if stereo:
+            self.depth_detected = False
+            self.face_3d = None
