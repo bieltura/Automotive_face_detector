@@ -125,7 +125,5 @@ def run(stereo):
             # Recognizer thread
             recognizer.close(stereo)
 
-            results = None
-
             cv2.destroyAllWindows()
             break

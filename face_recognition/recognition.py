@@ -75,10 +75,8 @@ class FacialRecognition(Thread):
 
                                 depth_info = self.nn_depth.predict(np.expand_dims(np.expand_dims(depth_face, axis=0),axis=3))[0]
 
-                                print(depth_info)
-
                         # If the detected depth map is a face or is 2D scanning
-                        if depth_info > 0.01 or self.nn_depth is None:
+                        if depth_info > 0.3 or self.nn_depth is None:
 
                             with self.facenet_graph.as_default():
 
@@ -93,7 +91,6 @@ class FacialRecognition(Thread):
     def recognize_face(self, face, depth_face=None):
         self.face = face
         self.depth_face = depth_face
-
     def get_face_features(self):
         return self.face_features
 
@@ -102,19 +99,21 @@ class FacialRecognition(Thread):
         self.stopThread = True
 
     def get_match(self):
-        match = None
+        match = "unknown"
         if self.face_features is not None:
 
             # Get all persons from database
             persons = db.get_all_persons()
-            match = "unknown"
+            distance = [1] * len(persons)
 
             # Compare the distance with each person from DB
             for i, person in enumerate(persons):
-                distance = np.sum(
-                    np.square(self.face_features - np.fromstring(person.face_features, np.float32)))
-                if distance < 0.56:
-                    match = person.name
-                    break
+                distance[i] = np.sum(np.square(self.face_features - np.fromstring(person.face_features, np.float32)))
+
+            if distance is not None:
+                if min(distance) < 0.45:
+                    match = persons[distance.index(min(distance))].name
+
+            self.face_features = None
 
         return match
