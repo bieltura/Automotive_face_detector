@@ -75,6 +75,8 @@ class FacialRecognition(Thread):
 
                                 depth_info = self.nn_depth.predict(np.expand_dims(np.expand_dims(depth_face, axis=0),axis=3))[0]
 
+                                print(depth_info)
+
                         # If the detected depth map is a face or is 2D scanning
                         if depth_info > 0.3 or self.nn_depth is None:
 

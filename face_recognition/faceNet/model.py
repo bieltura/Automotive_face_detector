@@ -15,13 +15,18 @@ def create_model(weights_path):
     input_shape = (96, 96, 3)
     myInput = Input(shape=input_shape)
 
+    # First Conv layer
     x = ZeroPadding2D(padding=(3, 3), input_shape=input_shape)(myInput)
     x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1')(x)
     x = BatchNormalization(axis=3, epsilon=0.00001, name='bn1')(x)
     x = Activation('relu')(x)
+
+    # max pool + norm
     x = ZeroPadding2D(padding=(1, 1))(x)
     x = MaxPooling2D(pool_size=3, strides=2)(x)
     x = Lambda(LRN2D, name='lrn_1')(x)
+
+    # Inception 2 (3x3)
     x = Conv2D(64, (1, 1), name='conv2')(x)
     x = BatchNormalization(axis=3, epsilon=0.00001, name='bn2')(x)
     x = Activation('relu')(x)
@@ -29,6 +34,8 @@ def create_model(weights_path):
     x = Conv2D(192, (3, 3), name='conv3')(x)
     x = BatchNormalization(axis=3, epsilon=0.00001, name='bn3')(x)
     x = Activation('relu')(x)
+
+    # norm + max pool
     x = Lambda(LRN2D, name='lrn_2')(x)
     x = ZeroPadding2D(padding=(1, 1))(x)
     x = MaxPooling2D(pool_size=3, strides=2)(x)
@@ -219,5 +226,6 @@ def create_model(weights_path):
 
     model = Model(inputs=[myInput], outputs=norm_layer)
     model.load_weights(weights_path)
+    print(model.summary())
 
     return model

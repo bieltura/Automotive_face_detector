@@ -1,6 +1,10 @@
 from face_detector.detector import CameraFaceDetector
 from face_recognition.recognition import FacialRecognition
 
+import cv2
+
+num_face = 990
+
 
 class Recognizer:
     def __init__(self, cam, stereo):
@@ -27,6 +31,8 @@ class Recognizer:
 
     # Main program
     def recognize(self, stereo, frame_right, frame_left=None):
+
+        global num_face
 
         if frame_right is not None:
 
@@ -57,10 +63,15 @@ class Recognizer:
                 # Once the face is detected, get the 3D model from the stereo
                 if self.face_3d is None:
                     self.face_3d, scene = self.face_detector.get3dFace()
+                    #cv2.imshow('scene', scene)
 
                 # 3D model has been obtained
                 else:
                     self.depth_detected = True
+
+                    cv2.imwrite('real_b/3d_face' + str(num_face) + '.png', self.face_3d)
+                    cv2.imwrite('real_b/aligned' + str(num_face) + '.png', self.face)
+                    num_face = num_face + 1
 
                     # Face and depth detected, recognize 3D:
                     self.facial_recognition_thread.recognize_face(self.face, self.face_3d)
