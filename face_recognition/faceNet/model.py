@@ -226,6 +226,5 @@ def create_model(weights_path):
 
     model = Model(inputs=[myInput], outputs=norm_layer)
     model.load_weights(weights_path)
-    print(model.summary())
 
     return model
