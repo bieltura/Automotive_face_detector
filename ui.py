@@ -116,9 +116,6 @@ def run(stereo):
             ui = draw(stereo, results, frame_right, frame_left)
             cv2.imshow(title, ui)
 
-            #if results[2] is not None:
-                #recognizer.clean()
-
         # Closing the app
         if cv2.waitKey(1) & 0xFF == ord('q'):
 
