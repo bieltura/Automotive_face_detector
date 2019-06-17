@@ -7,3 +7,6 @@ venv/
 # Compiled binaries
 __pycache__/
 */__pycache__/
+
+# Evaluation pictures
+evaluation/img/*.png

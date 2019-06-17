@@ -3,4 +3,6 @@ opencv-contrib-python
 SQLAlchemy
 tensorflow
 dlib
-PIL
+Pillow
+pyserial
+pycairo

@@ -5,9 +5,11 @@ import cv2
 
 num_face = 990
 
+num_face = 799
+
 
 class Recognizer:
-    def __init__(self, cam, stereo):
+    def __init__(self, scaleFactor, stereo):
 
         # Face size (square in px for CNN)
         self.face_size = 96
@@ -26,7 +28,7 @@ class Recognizer:
         self.facial_recognition_thread.start()
 
         # Any of the two cameras for the scalefactor
-        self.face_detector = CameraFaceDetector(cam.getScaleFactor(), self.face_size, stereo=stereo)
+        self.face_detector = CameraFaceDetector(scaleFactor, self.face_size, stereo=stereo)
         self.face_detector.start()
 
     # Main program
@@ -37,6 +39,10 @@ class Recognizer:
         if frame_right is not None:
 
             if not self.face_detected:
+
+                # Not face detected, restore the match and the 3D
+                self.match = None
+                self.face_3d = None
 
                 # Pass the frames to detect the face, generates the depth map and the face
                 self.face_detector.detect(frame_right.copy(), frame_left)
@@ -69,9 +75,9 @@ class Recognizer:
                 else:
                     self.depth_detected = True
 
-                    cv2.imwrite('real_b/3d_face' + str(num_face) + '.png', self.face_3d)
-                    cv2.imwrite('real_b/aligned' + str(num_face) + '.png', self.face)
-                    num_face = num_face + 1
+                    #cv2.imwrite('paper/3d_paper' + str(num_face) + '.png', self.face_3d)
+                    #cv2.imwrite('real_b/aligned' + str(num_face) + '.png', self.face)
+                    #num_face = num_face + 1
 
                     # Face and depth detected, recognize 3D:
                     self.facial_recognition_thread.recognize_face(self.face, self.face_3d)
@@ -84,12 +90,12 @@ class Recognizer:
                 self.face_detected = False
                 self.face_detector.detect(None, None)
 
-                    # Turn back to scan faces
+                # Turn back to scan faces
                 self.face = None
                 self.face_landmarks = None
 
                 if stereo:
-                    self.face_3d = None
+                    #self.face_3d = None
                     self.depth_detected = False
 
             if stereo:

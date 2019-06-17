@@ -63,18 +63,19 @@ def draw(stereo, results, frame_right, frame_left):
             y= frame_height + 2*y_margin + square_images + 20
             size = 30
 
-        if match is "unknown":
+        if match is "unknown" or match is None:
             action = cv2.resize(cv2.imread("img/lock.jpg"), (size, size))
-            match = "Identity not recognized"
+            match_text = "Identity not recognized"
         else:
+            match_text = match
             action = cv2.resize(cv2.imread("img/unlock.jpg"), (size, size))
 
         ui[y:y+size, x:x+size] = action
 
         if stereo:
-            cv2.putText(ui, match, (x - 60, y - 30), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (0, 0, 0))
+            cv2.putText(ui, match_text, (x - 60, y - 30), cv2.FONT_HERSHEY_TRIPLEX, 0.6, (0, 0, 0))
         else:
-            cv2.putText(ui, match, (x + 2*size, y+20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 0))
+            cv2.putText(ui, match_text, (x + 2*size, y+20), cv2.FONT_HERSHEY_TRIPLEX, 0.5, (0, 0, 0))
 
     return ui
 
@@ -95,7 +96,7 @@ def run(stereo):
         cam[cam_id] = cameras.FaceCamera(cam_id)
         cam[cam_id].start()
 
-    recognizer = Recognizer(cam=cam[0], stereo=stereo)
+    recognizer = Recognizer(scaleFactor=cam[0].getScaleFactor(), stereo=stereo)
 
 
     # Main method
@@ -114,6 +115,9 @@ def run(stereo):
             results = recognizer.recognize(stereo, frame_right, frame_left)
             ui = draw(stereo, results, frame_right, frame_left)
             cv2.imshow(title, ui)
+
+            #if results[2] is not None:
+                #recognizer.clean()
 
         # Closing the app
         if cv2.waitKey(1) & 0xFF == ord('q'):

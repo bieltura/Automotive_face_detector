@@ -5,7 +5,7 @@ import os
 # Termination criteria
 criteria_stereo = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-# Arrays to store object points and image points from all images
+# Arrays to store object points and image points from all img
 objpoints = []
 imgpointsR = []
 imgpointsL = []
@@ -94,7 +94,7 @@ def detect_3d_face(frameRight, frameLeft, map_size, ROI=None):
         frameR = cv2.resize(frameRight, calibration_size)
         frameL = cv2.resize(frameLeft, calibration_size)
 
-        # Rectify the images on rotation and alignement
+        # Rectify the img on rotation and alignement
         Left_nice = cv2.remap(frameL, Left_Stereo_Map[0], Left_Stereo_Map[1], cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
         Right_nice = cv2.remap(frameR, Right_Stereo_Map[0], Right_Stereo_Map[1], cv2.INTER_LANCZOS4, cv2.BORDER_CONSTANT, 0)
 
